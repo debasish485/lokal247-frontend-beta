@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -56,7 +57,7 @@ export default function RecruiterJobsPage() {
     if (diffDays === 1) return "Posted 1 day ago";
     return `Posted ${diffDays} days ago`;
   };
-  const formatDateOrdinal = (dateStr:string) => {
+  const formatDateOrdinal = (dateStr: string) => {
     if (!dateStr) return "N/A";
     const date = new Date(dateStr);
     const day = date.getDate();
@@ -66,7 +67,7 @@ export default function RecruiterJobsPage() {
 
     const year = date.getFullYear();
 
-    const getOrdinal = (n:number) => {
+    const getOrdinal = (n: number) => {
       if (n > 3 && n < 21) return "th";
       switch (n % 10) {
         case 1: return "st";
@@ -80,11 +81,12 @@ export default function RecruiterJobsPage() {
   };
 
   // Capitalize first letter
-  const capitalize = (text:string) => {
+  const capitalize = (text: string) => {
     if (!text) return "";
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   };
 
+  
   return (
     <div className="w-full flex flex-col gap-[20px] px-5">
       {loading && <p className="text-gray-500">Loading jobs...</p>}
@@ -132,12 +134,7 @@ export default function RecruiterJobsPage() {
 
               <button
                 className="flex items-center justify-center shrink-0"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "#F1F1F1",
-                  borderRadius: "50%",
-                }}
+                onClick={() => router.push(`/recruiter/jobs/${job.uuid}/edit`)}
               >
                 <img
                   src="/images/edit-btn.svg"
