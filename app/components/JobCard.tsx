@@ -75,7 +75,7 @@ export default function JobCard({
   return (
     <article className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
       <div className="flex gap-4">
-        <div className="w-14 h-14 rounded-md bg-emerald-50 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-md bg-emerald-50 flex items-center justify-center flex shrink-0">
           <img
             src={logo}
             alt={company}
@@ -101,7 +101,7 @@ export default function JobCard({
       </div>
 
       <p
-        className="text-sm text-[#30363F] mt-3 overflow-hidden"
+        className="text-sm text-[#30363F] mt-3 overflow-hidden break-words"
         style={{
           display: "-webkit-box",
           WebkitLineClamp: 2,
@@ -123,7 +123,7 @@ export default function JobCard({
         </span>
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-sm">
+      <div className="mt-auto flex items-center justify-between text-sm">
         <div className="flex items-center gap-4">
           <span className="font-semibold text-[#1B2021]">
             {salary}

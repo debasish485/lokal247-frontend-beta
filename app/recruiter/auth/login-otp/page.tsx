@@ -17,7 +17,7 @@ declare global {
 export default function PhoneLoginPage() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
-   const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("");
   const router = useRouter();
 
   const setupRecaptcha = () => {
@@ -47,7 +47,7 @@ export default function PhoneLoginPage() {
 
       window.confirmationResult = result;
 
-      router.push(`/auth/otp-verify?phone=${phone}`);
+      router.push(`/recruiter/auth/otp-verify?phone=${phone}`);
     } catch (err: any) {
       console.error("OTP Error:", err);
 
@@ -140,7 +140,7 @@ export default function PhoneLoginPage() {
         {/* Register link */}
         <p className="text-center text-sm mt-4">
           Don’t have an account?{" "}
-          <Link href="/auth/register" className="text-emerald-700">
+          <Link href="/recruiter/auth/register" className="text-emerald-700">
             Register now
           </Link>
         </p>

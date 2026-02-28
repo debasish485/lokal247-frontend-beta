@@ -1,12 +1,10 @@
-"use client";
-
 export default function SubCategorySkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="mt-8 w-full flex gap-[8px] justify-center flex-wrap">
+    <div className="flex gap-[8px] justify-center overflow-x-auto scrollbar-hide">
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="w-[150px] h-[36px] rounded-[28px] bg-gray-200 animate-pulse"
+          className="flex-shrink-0 w-[150px] h-[36px] rounded-[28px] bg-gray-200 animate-pulse"
         />
       ))}
     </div>

@@ -2,10 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 
 type Props = {
   jobId: string;
 };
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+if (!RECAPTCHA_SITE_KEY) {
+  throw new Error("NEXT_PUBLIC_RECAPTCHA_SITE_KEY is missing");
+}
 
 export default function QuickApplyForm({ jobId }: Props) {
   const router = useRouter();
@@ -19,6 +25,7 @@ export default function QuickApplyForm({ jobId }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const recaptchaRef = useRef<ReCAPTCHA | null>(null);
 
   const [submitted, setSubmitted] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
@@ -64,6 +71,12 @@ export default function QuickApplyForm({ jobId }: Props) {
     try {
       setLoading(true);
 
+      const captchaToken = await recaptchaRef.current?.executeAsync();
+      if (!captchaToken) {
+        alert("Please complete the CAPTCHA");
+        setLoading(false);
+        return;
+      }
       const res = await fetch(`/api/worker/jobs/${jobId}/apply`, {
         method: "POST",
         credentials: "include",
@@ -76,6 +89,7 @@ export default function QuickApplyForm({ jobId }: Props) {
             email,
             mobile_number:contact,
             dob,
+            captchaToken,
           }
         )
       });
@@ -97,6 +111,7 @@ export default function QuickApplyForm({ jobId }: Props) {
       alert("Job apply failed");
     } finally {
       setLoading(false);
+      recaptchaRef.current?.reset();
     }
   };
 
@@ -208,6 +223,9 @@ export default function QuickApplyForm({ jobId }: Props) {
           className={inputClass}
         />
       </div>
+
+      {/* Invisible reCAPTCHA */}
+      <ReCAPTCHA ref={recaptchaRef} sitekey={RECAPTCHA_SITE_KEY} size="invisible" />
 
       {/* Submit */}
       <button

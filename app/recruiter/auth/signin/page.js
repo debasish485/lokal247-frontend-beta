@@ -195,6 +195,16 @@ export default function Login() {
             Continue with Google
           </span>
         </motion.button>
+        {/* Switch to OTP Login */}
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Login instead with{" "}
+          <Link
+            href="/recruiter/auth/login-otp"
+            className="text-emerald-700 font-medium hover:underline"
+          >
+            OTP
+          </Link>
+        </p>
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-2">

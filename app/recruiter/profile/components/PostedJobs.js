@@ -88,7 +88,7 @@ export default function PostedJobs() {
             className="bg-white flex flex-col p-2 rounded-lg border border-[#DEE2E6] gap-4"
           >
             {/* HEADER */}
-            <div className="flex justify-between">
+            <div className="flex items-start justify-between gap-2">
               <div>
                 <h2
                   className="font-semibold text-lg text-gray-900 cursor-pointer line-clamp-1"
@@ -98,7 +98,7 @@ export default function PostedJobs() {
                 </h2>
                 <p className="text-[#A3A3A3] text-sm">{getPostedDaysAgo(job.created_at)}</p>
               </div>
-              <button className="w-10 h-10 bg-[#F1F1F1] rounded-full flex justify-center items-center">
+              <button className="w-10 h-10 flex shrink-0 bg-[#F1F1F1] rounded-full flex justify-center items-center cursor-pointer"onClick={() => router.push(`/recruiter/jobs/${job.uuid}/edit`)}>
                 <img src="/images/edit-btn.svg" width={16} />
               </button>
             </div>

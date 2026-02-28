@@ -6,16 +6,22 @@ export async function POST(
   { params }: { params: Promise<{ applicationId: string }> }
 ) {
   try {
+  
     const cookieStore = await cookies();
-    const token = cookieStore.get("auth_token")?.value;
+
+    const recruiterToken = cookieStore.get("auth_token")?.value;
+    const workerToken = cookieStore.get("worker_token")?.value;
+
+  
+    const token = workerToken || recruiterToken;
+
+    console.log("TOKEN:", token);
 
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-
-    // ✅ AWAIT params
     const { applicationId } = await params;
 
     const backendRes = await fetch(
@@ -32,15 +38,7 @@ export async function POST(
 
     const data = await backendRes.json();
 
-    if (!backendRes.ok) {
-      return NextResponse.json(
-        { message: data.message || "Failed to submit review" },
-        { status: backendRes.status }
-      );
-    }
-
-    return NextResponse.json(data, { status: 200 });
-
+    return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.log("Review submit error:", error);
     return NextResponse.json(

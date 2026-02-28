@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import RecruiterPanelPage from "../panel/page";
 import Sidebar from "./components/Sidebar";
+import { useSearchParams } from "next/navigation";
 
 export default function RecruiterProfilePage() {
   const [profile, setProfile] = useState(null);
@@ -12,10 +13,18 @@ export default function RecruiterProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [message, setMessage] = useState (null);
   const [updateLoading, setUpdateLoading] = useState(false);
+  const searchParams = useSearchParams();
 
 
   const router = useRouter();
   const EMERALD = "oklch(50.8% 0.118 165.612)";
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -79,6 +88,10 @@ export default function RecruiterProfilePage() {
       router.refresh();
     }
   };
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    router.push(`?tab=${tab}`, { shallow: true }); // update URL without reload
+  };
 
   if (loading) return <p className="p-6">Loading Profile...</p>;
   if (!profile) return <p className="p-6 text-red-600">Profile not found.</p>;
@@ -92,6 +105,7 @@ export default function RecruiterProfilePage() {
           setActiveTab={setActiveTab}
           handleLogout={handleLogout}
           EMERALD={EMERALD}
+          handleTabChange={handleTabChange}
         />
 
         {/* RIGHT COLUMN */}

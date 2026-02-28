@@ -11,12 +11,15 @@ export async function POST(req:NextRequest,context:{params:Promise<{jobId:string
         if(!token){
             return NextResponse.json({message:"Unauthorized"},{status:401});
         }
+        const body=await req.json();
         const backendRes=await fetch(`${BASE_URL}/api/worker/jobs/${jobId}/apply`,{
             method:"POST",
             headers:{
                 Authorization:`Bearer ${token}`,
                 Accept:"application/json",
-            }
+                "Content-Type":"application/json",
+            },
+            body:JSON.stringify(body)
         });
 
         const data=await backendRes.json();

@@ -1,11 +1,11 @@
 "use client";
 
-export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout, EMERALD }) {
+export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout,handleTabChange, EMERALD }) {
 
 
   function Stars({ rating }) {
     const stars = [];
-    const r = rating != null ? rating : 4; // rating না থাকলে 4 star colored
+    const r = rating != null ? rating : 4; 
 
     for (let i = 1; i <= 5; i++) {
       if (i <= r) {
@@ -97,6 +97,7 @@ export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout
           icon="/images/profile.svg"
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          handleTabChange={handleTabChange}
         />
         <SidebarItem
           label="Post a Job"
@@ -104,6 +105,7 @@ export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout
           icon="/images/create_job.svg"
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          handleTabChange={handleTabChange}
         />
         <SidebarItem
           label="Posted Jobs"
@@ -111,6 +113,7 @@ export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout
           icon="/images/posted_job.svg"
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          handleTabChange={handleTabChange}
         />
         <SidebarItem
           label="Help Centre"
@@ -118,6 +121,7 @@ export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout
           icon="/images/help.svg"
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          handleTabChange={handleTabChange}
         />
         {/* LOGOUT */}
         <div
@@ -132,11 +136,11 @@ export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout
 }
 
 /* SidebarItem Component */
-function SidebarItem({ label, tab, icon, activeTab, setActiveTab }) {
+function SidebarItem({ label, tab, icon, activeTab, setActiveTab,handleTabChange }) {
   const isActive = activeTab === tab;
   return (
     <div
-      onClick={() => setActiveTab(tab)}
+      onClick={() => handleTabChange(tab)}
       className={`w-full h-[75px] rounded-[10px] cursor-pointer flex items-center gap-[10px] px-[25px] border border-[#DEE2E6]`}
     >
       <img src={icon} alt={label} className="w-[25px] h-[25px]" />

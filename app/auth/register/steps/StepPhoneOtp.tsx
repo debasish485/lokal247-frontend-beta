@@ -49,6 +49,34 @@ export default function StepPhoneOtp({
     }
   };
 
+  const checkPhoneNumber = async (phone: string) => {
+    try {
+      const cleanPhone = phone.replace(/\D/g, "");
+      const payload = { mobile_number: cleanPhone.startsWith("91") ? cleanPhone : "91" + cleanPhone };
+
+      const res = await fetch(`/api/worker/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // If mobile is already taken
+        if (data.errors?.mobile_number?.[0]) {
+          return { exists: true, message: data.errors.mobile_number[0] };
+        }
+        return { exists: false, message: data.message || "Unknown error" };
+      }
+
+      return { exists: false };
+    } catch (err: any) {
+      console.error("Phone check error:", err);
+      return { exists: false, message: "Network error" };
+    }
+  };
+
   // ---------------- Send OTP ----------------
   const sendOTP = async () => {
     if (!workerData.name || !workerData.mobile_number) {
@@ -58,6 +86,13 @@ export default function StepPhoneOtp({
 
     setLoading(true);
     setMessage("");
+
+    const check = await checkPhoneNumber(workerData.mobile_number);
+    if (check.exists) {
+      setMessage(check.message); // Show "The mobile number has already been taken."
+      setLoading(false);
+      return;
+    }
 
     try {
       setupRecaptcha();
@@ -186,6 +221,8 @@ export default function StepPhoneOtp({
     }
   };
 
+
+
   return (
     <StepLayout
       footer={
@@ -193,12 +230,12 @@ export default function StepPhoneOtp({
           <div className="flex gap-4 w-full">
             <button
               onClick={onBack}
-              className="flex justify-center items-center w-full rounded-[4px] text-[16px] h-[50px] font-medium 
-                text-black px-4 py-2 shadow-sm transition"
+              className="fixed top-4 left-4 z-50 text-black font-medium px-4 py-2 rounded-[4px] 
+    shadow-sm hover:bg-gray-100 transition 
+    outline-none focus:outline-none"
             >
               Back
             </button>
-
             {!otpSent && (
               <button
                 onClick={sendOTP}

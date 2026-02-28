@@ -75,6 +75,7 @@ export default function Preferences() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showAllModal, setShowAllModal] = useState(false);
 
   const capitalizeFirst = (str: string) =>
     str.charAt(0).toUpperCase() + str.slice(1);
@@ -252,47 +253,113 @@ export default function Preferences() {
           <div className={selectWrapperClass}>
             <Multiselect
               options={subCategories}
-              selectedValues={selectedSubCategories}
+              selectedValues={selectedSubCategories.slice(0, 2)}
               displayValue="name"
               placeholder=""
               onSelect={(list) => {
                 setSelectedSubCategories(list);
                 setFormData((prev) => ({
                   ...prev,
-                  subcategory_ids: list.map((i:SubCategory) => i.id),
+                  subcategory_ids: list.map((i: SubCategory) => i.id),
                 }));
               }}
               onRemove={(list) => {
                 setSelectedSubCategories(list);
                 setFormData((prev) => ({
                   ...prev,
-                  subcategory_ids: list.map((i:SubCategory) => i.id),
+                  subcategory_ids: list.map((i: SubCategory) => i.id),
                 }));
               }}
               customCloseIcon={
-                <IoClose size={16}color="red"/>
+                <IoClose size={16} color="red" />
               }
               style={{
-                multiselectContainer: { minHeight: "56px" },
+                multiselectContainer: { minHeight: "56px",position:"relative" },
                 searchBox: {
                   border: "1px solid #E7EDF1",
                   borderRadius: "8px",
                   padding: "14px",
                   fontSize: "14px",
-                  height: "56px"
+                  height: "56px",
+                  overflow: "hidden",
+                  flexWrap:"nowrap",
+                  display:"flex",
+                  alignItems:"center"
                 },
                 chips: {
                   background: "#D1FAE5",
                   color: "#047857",
                   fontSize: "12px",
                   padding: "2px 6px",
+                  
+                  whitespace: "nowrap",
+                  textOverflow: "ellipsis"
                 },
                 option: { fontSize: "14px" },
               }}
             />
+            {/* +more text */}
+            {selectedSubCategories.length > 3 && (
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-xs text-gray-500">
+                  +{selectedSubCategories.length - 3} more
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowAllModal(true)}
+                  className="text-xs text-blue-600 underline"
+                >
+                  View all
+                </button>
+              </div>
+            )}
             <span className={arrowClass}>▼</span>
           </div>
         </div>
+
+        {showAllModal && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white w-[400px] rounded-lg p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">
+                  Selected Sub Categories
+                </h2>
+                <button
+                  onClick={() => setShowAllModal(false)}
+                  className="text-red-500"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="max-h-[300px] overflow-y-auto space-y-2">
+                {selectedSubCategories.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-center border p-2 rounded"
+                  >
+                    <span>{item.name}</span>
+                    <button
+                      onClick={() => {
+                        const updated = selectedSubCategories.filter(
+                          (i) => i.id !== item.id
+                        );
+                        setSelectedSubCategories(updated);
+                        setFormData((prev) => ({
+                          ...prev,
+                          subcategory_ids: updated.map((i) => i.id),
+                        }));
+                      }}
+                      className="text-red-500 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
 
         {/* EXPERIENCE */}

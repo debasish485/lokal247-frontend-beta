@@ -52,7 +52,7 @@ export default function RecruiterNavbar() {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
       setIsLoggedIn(false);
-      router.replace("/recruiter/auth/signin");
+      router.replace("/recruiter/auth/login-otp");
       router.refresh();
     }
   };

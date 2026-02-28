@@ -58,6 +58,22 @@ export default async function JobDetailsPage({ params }: PageProps) {
     if (!text) return "";
     return text.length > maxLength ? text.slice(0, maxLength) + "…" : text;
   }
+
+  function formatJobType(type?: string) {
+    if (!type) return "Job Type";
+    let label = "";
+    switch (type) {
+      case "wfh": label = "Work From Home"; break;
+      case "wfo": label = "Work From Office"; break;
+      case "hybrid": label = "Hybrid"; break;
+      default: label = type;
+    }
+    // Capitalize first letter of each word
+    return label
+      .split(" ")
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
   // 5️⃣ UI
   return (
     <div>
@@ -84,54 +100,57 @@ export default async function JobDetailsPage({ params }: PageProps) {
                 </span>
               </nav>
 
-              <span className="inline-block bg-white text-[#073B3A] text-xs font-semibold px-4 py-1 rounded-full mb-4">
-                Full Time
-              </span>
+              <div className="flex flex-col gap-3 mt-16">
+                <span className="inline-block w-fit bg-white text-black text-xs font-semibold px-4 py-1 rounded-full">
+                  {formatJobType(job.schedule?.work_type)}
+                </span>
 
-              <h1 className="text-3xl md:text-4xl font-bold mb-3 line-clamp-2 mt-8">
-                {job.title ? stripHtml(job.title) : "No title Provided"}
-              </h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-3 line-clamp-2">
+                  {job.title ? stripHtml(job.title) : "No title Provided"}
+                </h1>
 
-              <div className="flex items-center gap-2 text-sm text-gray-300 mb-4">
-                <span>📍 {job.location.city}, {job.location.locality}</span>
-                <div className="flex items-center gap-1 text-yellow-400">
-                  <FaStar size={16} />
-                  <FaStar size={16} />
-                  <FaStar size={16} />
-                  <FaStar size={16} />
-                  <FaStar size={16} className="text-[#C7D2DD]" />
+                <div className="flex items-center gap-2 text-sm text-gray-300">
+                  <span>📍 {job.location.city}, {job.location.locality}</span>
+                  <div className="flex items-center gap-1 text-yellow-400">
+                    <FaStar size={16} />
+                    <FaStar size={16} />
+                    <FaStar size={16} />
+                    <FaStar size={16} />
+                    <FaStar size={16} className="text-[#C7D2DD]" />
+                  </div>
+                  <span>4.6</span>
                 </div>
-                <span>4.6</span>
-              </div>
 
-              <p
-                className="mt-2 overflow-hidden text-ellipsis whitespace-nowrap"
-                style={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: 1,
-                  WebkitBoxOrient: "vertical",
-                }}
-              >
-                {job.description ? stripHtml(job.description) : "No description provided"}
-              </p>
+                <p
+                  className="overflow-hidden text-ellipsis whitespace-nowrap"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
+                  }}
+                >
+                  {job.description ? stripHtml(job.description) : "No description provided"}
+                </p>
+              </div>
               {/* INFO */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm mt-4">
-                <div>
-                  <p className="text-gray-400">Department</p>
-                  <p className="font-semibold">{job.category.name}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Location</p>
-                  <p className="font-semibold">
-                    {job.location.city}, {job.location.locality}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Salary</p>
-                  <p className="font-semibold">
-                    ₹{job.salary.pay_amount} / {job.salary.pay_type}
-                  </p>
-                </div>
+                {["Department", "Location", "Salary"].map((label, idx) => {
+                  let value = "";
+                  if (label === "Department") value = job.category?.name || "-";
+                  else if (label === "Location") value = `${job.location?.city || "-"}, ${job.location?.locality || "-"}`;
+                  else if (label === "Salary") value = `₹${job.salary?.pay_amount ?? 0} / ${job.salary?.pay_type ?? "-"}`;
+
+                  return (
+                    <div
+                      key={idx}
+                      className="flex flex-col"
+                      style={{ minWidth: 0 }}
+                    >
+                      <p className="text-gray-400">{label}</p>
+                      <p className="font-semibold truncate">{value}</p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -159,21 +178,28 @@ export default async function JobDetailsPage({ params }: PageProps) {
               </h2>
 
               <div
-                className="
-                  break-words
-                  [&>p]:mb-4 
-                  [&>p]:leading-relaxed 
-                  [&>ul]:list-none [&>ul]:ml-6 [&>ul]:mb-6
-                  [&>ul>li]:mb-4
-                  [&>ol]:list-none [&>ol]:ml-6 [&>ol]:mb-6
-                  [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-6
-                  [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-3
-                  [&>h3]:text-lg [&>h3]:font-semibold [&>h3]:mb-3
-                  [&>strong]:font-semibold
-                  [&>em]:italic
-                  "
-                dangerouslySetInnerHTML={{ __html: job.description || "No description provided" }}
-              />
+  className="
+    break-words
+    overflow-hidden
+    max-w-full
+
+    [&_ul]:list-disc
+    [&_ul]:ml-6
+    [&_ul]:mb-4
+
+    [&_ol]:list-decimal
+    [&_ol]:ml-6
+    [&_ol]:mb-4
+
+    [&_li]:mb-2
+
+    [&_p]:mb-3
+
+    [&_img]:max-w-full
+    [&_img]:h-auto
+  "
+  dangerouslySetInnerHTML={{ __html: job.description || "No description provided" }}
+/>
             </div>
             {/* RIGHT: QUICK APPLY */}
             <div className="bg-white rounded-xl shadow-sm p-6 h-fit">
@@ -186,13 +212,12 @@ export default async function JobDetailsPage({ params }: PageProps) {
               </p>
               {/* QuickApplyForm component */}
               <QuickApplyForm jobId={job_uuid} />
-              
+
             </div>
 
           </div>
         </div>
       </section>
-
     </div>
   );
 }

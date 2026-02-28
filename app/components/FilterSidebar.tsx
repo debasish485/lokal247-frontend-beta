@@ -89,7 +89,7 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
   };
 
   return (
-    <aside className="w-full flex-shrink-0 h-auto overflow-auto p-4 space-y-6 bg-white rounded-lg shadow-md border border-gray-200">
+    <aside className="w-full flex-shrink-0 h-auto overflow-auto p-4 space-y-0 bg-white rounded-lg shadow-md border border-gray-200">
       {/* Header */}
       <div className="flex justify-between items-center pb-6 mb-6 border-b border-gray-200">
         <h2 className="text-[20px] font-semibold leading-[24px] font-sans">Search Filter</h2>
@@ -146,13 +146,13 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
           </div>
         )}
       </div>
-      <div className="border-b border-gray-200 my-2"></div>
+      <div className="border-b border-gray-200"></div>
 
 
       {/* City */}
       <div className="relative">
         <div
-          className="w-full h-[56px] px-3 py-3 flex justify-between items-center cursor-pointer font-bold"
+          className="w-full h-[48px] px-3 py-2 flex justify-between items-center cursor-pointer font-bold"
           onClick={() => toggleDropdown("city")}
         >
           <span className="text-sm text-gray-900">
@@ -174,15 +174,21 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
                 {checkboxOption(
                   city.name,
                   city.slug,
-                  String(filters.city || ""),
-                  v => setFilters({ ...filters, city: v })
+                  filters.city.includes(city.slug) ? city.slug : "",
+                  v => {
+                    const updated = filters.city.includes(v)
+                      ? filters.city.filter(c => c !== v)
+                      : [...filters.city, v];
+
+                    setFilters({ ...filters, city: updated });
+                  }
                 )}
               </div>
             ))}
           </div>
         )}
       </div>
-      <div className="border-b border-gray-200 my-2"></div>
+      <div className="border-b border-gray-200"></div>
 
       {/* Shift */}
       <div className="relative">
@@ -215,7 +221,7 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
           </div>
         )}
       </div>
-      <div className="border-b border-gray-200 my-2"></div>
+      <div className="border-b border-gray-200"></div>
 
       {/* Price Range */}
       <div className="space-y-2">
@@ -231,7 +237,7 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
           }
         />
       </div>
-      <div className="border-b border-gray-200 my-2"></div>
+      <div className="border-b border-gray-200"></div>
 
       {/* Job Type */}
       <div className="relative">
@@ -257,14 +263,20 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
               checkboxOption(
                 opt.label,
                 opt.value,
-                filters.work_type,
-                v => setFilters({ ...filters, work_type: filters.work_type === v ? "" : v })
+                filters.work_type.includes(opt.value) ? opt.value : "",
+                v => {
+                  const updated = filters.work_type.includes(v)
+                    ? filters.work_type.filter(t => t !== v)
+                    : [...filters.work_type, v];
+
+                  setFilters({ ...filters, work_type: updated });
+                }
               )
             )}
           </div>
         )}
       </div>
-      <div className="border-b border-gray-200 my-2"></div>
+      <div className="border-b border-gray-200 mb-2"></div>
 
       <NewsletterCard />
     </aside>

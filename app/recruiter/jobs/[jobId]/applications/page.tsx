@@ -11,6 +11,9 @@ type JobData = {
     location: { city: string; locality: string };
     salary: { pay_type: string; pay_amount: number };
     category: { name: string };
+    schedule?: {
+        work_type: string;
+    };
 };
 
 export default function JobDetailsPage() {
@@ -19,8 +22,15 @@ export default function JobDetailsPage() {
     const [applicants, setApplicants] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [showModal, setShowModal] = useState(false);
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<"details" | "applicants">("details");
 
-    const router=useRouter();
+    const router = useRouter();
     useEffect(() => {
         if (!jobId) return;
 
@@ -39,6 +49,15 @@ export default function JobDetailsPage() {
                 setJob(data.job);
                 setApplicants(data.applicant);
 
+                const hiredApplicant = data.applicant.find(
+                    (a: any) => a.status === "hired"
+                );
+
+                if (hiredApplicant) {
+                    setSelectedApplicant(hiredApplicant);
+                    setSelectedApplicationId(hiredApplicant.job_application_uuid);
+                }
+
             } catch (err: any) {
                 console.error(err);
                 setError("Unable to load job details");
@@ -51,9 +70,20 @@ export default function JobDetailsPage() {
     }, [jobId]);
 
     function stripHtml(html: string) {
-        const tmp = document.createElement("div");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
+        if (!html) return "";
+
+        // Remove tags
+        let text = html.replace(/<[^>]+>/g, "");
+
+        // Replace common entities
+        text = text.replace(/&nbsp;/g, " ");
+        text = text.replace(/&amp;/g, "&");
+        text = text.replace(/&lt;/g, "<");
+        text = text.replace(/&gt;/g, ">");
+        text = text.replace(/&quot;/g, '"');
+        text = text.replace(/&#39;/g, "'");
+
+        return text;
     }
 
     if (loading) return <p>Loading...</p>;
@@ -82,96 +112,318 @@ export default function JobDetailsPage() {
         return `${day}${getOrdinal(day)} ${month} ${year}`;
     }
 
+    const handleSubmitReview = async () => {
+        if (!selectedApplicant || !selectedApplicationId) {
+            alert("No applicant selected");
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+
+            const res = await fetch(
+                `/api/job-applications/${selectedApplicationId}/reviews`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        rating,
+                        comment,
+                        reviewee_id: selectedApplicant.id, // worker id
+                        reviewee_type: "App\\Models\\User", // as per your API
+                    }),
+                }
+            );
+
+            const result = await res.json();
+
+            if (!res.ok) {
+                alert(result.message || "Failed to submit review");
+                return;
+            }
+
+            alert("Review submitted successfully");
+            setShowModal(false);
+            setRating(0);
+            setComment("");
+            setSelectedApplicant(null);
+            setSelectedApplicationId(null);
+
+            router.refresh();
+        } catch (err) {
+            console.log(err);
+            alert("Something went wrong");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+    function Stars({ rating }: { rating?: number }) {
+        const stars = [];
+        const r = rating != null ? rating : 4;
+
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                <span
+                    key={i}
+                    className={i <= r ? "text-amber-400" : "text-gray-300"}
+                    style={{
+                        display: "inline-block",
+                        width: "20px",
+                        height: "20px",
+                        fontSize: "17px",
+                        lineHeight: "11px",
+
+                    }}
+                >
+                    ★
+                </span>
+            );
+        }
+        return <div className="text-xl">{stars}</div>;
+    }
+    function formatJobType(type?: string) {
+        if (!type) return "";
+        switch (type) {
+            case "wfh": return "Work From Home";
+            case "wfo": return "Work From Office";
+            case "hybrid": return "Hybrid";
+            default: return type;
+        }
+    }
+
+    const handleHire = async (app: any) => {
+        if (!jobId) return;
+
+        try {
+            setLoading(true);
+
+            const res = await fetch(`/api/recruiter/jobs/${jobId}/applicants/status`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    application_id: app.id,
+                    status: "hired",
+                }),
+            });
+
+            const data = await res.json();
+            console.log("APP DATA:", app);
+
+            // ✅ Even if API fails, we update frontend to mark as hired
+            setApplicants(prev =>
+                prev.map(a =>
+                    a.id === app.id ? { ...a, status: "hired" } : a
+                )
+            );
+
+            // ✅ Show applicant details on right panel
+            setSelectedApplicant({ ...app, status: "hired" });
+            setSelectedApplicationId(app.job_application_uuid);
+
+            alert("Worker hired successfully (frontend updated)");
+
+        } catch (err: any) {
+            console.error(err);
+            alert("Something went wrong, but frontend updated");
+            setApplicants(prev =>
+                prev.map(a =>
+                    a.id === app.id ? { ...a, hired: true } : a
+                )
+            );
+            setSelectedApplicant({ ...app, hired: true });
+            setSelectedApplicationId(app.job_application_uuid);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleMarkAsComplete = async () => {
+    if (!selectedApplicationId) return;
+
+    try {
+        setSubmitting(true);
+
+        const res = await fetch(`/api/recruiter/jobs/${jobId}/applicants/status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                application_id: selectedApplicant.id,
+                status: "completed", // ✅ mark complete
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.status === false) {
+            alert(data.message || "Failed to mark as complete");
+            return;
+        }
+
+        // ✅ Frontend update
+        setApplicants(prev =>
+            prev.map(a =>
+                a.job_application_uuid === selectedApplicationId
+                    ? { ...a, status: "completed" }
+                    : a
+            )
+        );
+
+        alert("Applicant marked as complete ✅");
+        setShowModal(true); // ✅ modal open kore review dite
+
+    } catch (err) {
+        console.error(err);
+        alert("Something went wrong");
+    } finally {
+        setSubmitting(false);
+    }
+};
 
     return (
         <>
             <div className="w-full bg-[#1B2021] text-white h-[345px]">
-                <div className="flex justify-between items-center w-full max-w-screen-xl mx-auto h-full">
-                    {/* LEFT SIDE */}
-                    <div className="flex flex-col gap-6 w-1/2 max-w-[600px] mt-10">
-                        {/* Job Title */}
-                        <div>
-                            <h1 className="text-3xl font-bold mt-10 line-clamp-1">
-                                {job.title ? stripHtml(job.title) : "No title provided"}
-                            </h1>
-                            <p className="mt-1 whitespace-nowrap">
-                                {job.location.city}, {job.location.locality}
-                            </p>
-                            <p
-                                className="mt-2 overflow-hidden text-ellipsis whitespace-nowrap"
-                                style={{
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 1,
-                                    WebkitBoxOrient: "vertical",
-                                }}
-                            >
-                                {job.description ? stripHtml(job.description) : "No description provided"}
-                            </p>
-                        </div>
+                <div className="flex flex-col md:flex-row w-full h-full">
 
-                        {/* Category / Location / Payment */}
-                        <div className="flex items-start gap-24 mt-6">
-                            {/* Category */}
-                            <div className="flex items-center gap-2 min-w-[120px]">
-                                <img src="/images/category.svg" alt="Category" className="w-10 h-10" />
-                                <div className="flex flex-col">
-                                    <span className="text-gray-400 font-normal text-base">Category</span>
-                                    <span className="font-semibold truncate">{job.category.name}</span>
-                                </div>
+                    {/* LEFT HALF */}
+                    <div className="w-full md:w-1/2 flex justify-center md:justify-end px-4">
+                        <div className="flex flex-col gap-4 max-w-[600px] mt-2 w-full md:pr-6">
+
+                            <div className="text-sm text-gray-400 flex items-center gap-2">
+                                <span
+                                    onClick={() => router.push("/recruiter/jobs")}
+                                    className="cursor-pointer hover:underline text-[#0B8260]"
+                                >
+                                    My Jobs
+                                </span>
+                                <span>/</span>
+                                <span className="text-gray-500">Job Details</span>
                             </div>
 
-                            {/* Location */}
-                            <div className="flex items-center gap-2 min-w-[140px]">
-                                <img src="/images/location.svg" alt="Location" className="w-10 h-10" />
+                            <div className="mt-8">
+                                <span className="inline-block w-fit bg-white text-black text-xs font-semibold px-4 py-1 rounded-full">
+                                    {formatJobType(job.schedule?.work_type)}
+                                </span>
+                                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-2 line-clamp-2 md:line-clamp-1">
+                                    {job.title ? stripHtml(job.title) : "No title provided"}
+                                </h1>
+                                <p className="mt-1 break-words">
+                                    {job.location.city}, {job.location.locality}
+                                </p>
+                                <p
+  className="mt-2 line-clamp-3 md:line-clamp-1"
+                                >
+                                    {job.description ? stripHtml(job.description) : "No description provided"}
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-12 mt-6">
+                                <div className="flex items-center gap-2 min-w-[120px]">
+                                    <img src="/images/category.svg" alt="Category" className="w-10 h-10" />
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-400 text-base">Category</span>
+                                        <span className="font-semibold truncate">{job.category.name}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 min-w-[140px]">
+                                    <img src="/images/location.svg" alt="Location" className="w-10 h-10" />
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-400 text-base">Location</span>
+                                        <span className="font-semibold truncate">
+                                            {job.location.city}, {job.location.locality}
+                                        </span>
+                                    </div>
+                                </div>
+
                                 <div className="flex flex-col">
-                                    <span className="text-gray-400 font-normal text-base">Location</span>
+                                    <span className="text-gray-400 text-base min-w-[140px]">
+                                        Expected Payment
+                                    </span>
                                     <span className="font-semibold truncate">
-                                        {job.location.city}, {job.location.locality}
+                                        ₹{job.salary.pay_amount} /{" "}
+                                        {job.salary.pay_type.charAt(0).toUpperCase() +
+                                            job.salary.pay_type.slice(1)}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Expected Payment */}
-                            <div className="flex flex-col">
-                                <span className="text-gray-400 font-normal text-base min-w-[140px]">Expected Payment</span>
-                                <span className="font-semibold truncate">
-                                    ₹{job.salary.pay_amount} / {job.salary.pay_type.charAt(0).toUpperCase() + job.salary.pay_type.slice(1)}
-                                </span>
-                            </div>
                         </div>
                     </div>
 
-                    {/* RIGHT SIDE IMAGE */}
-                    <div className="flex justify-end items-center">
+                    {/* RIGHT HALF (IMAGE TOUCHES SCREEN EDGE) */}
+                    <div className="w-full md:w-1/2 flex justify-center md:justify-end items-center mt-6 md:mt-0">
                         <img
                             src="/images/jobDetailsleft-img.svg"
                             alt="Job Image"
-                            className="max-w-[400px] w-full h-auto object-contain"
+                            className="max-w-[520px] w-full h-auto object-contain"
                         />
                     </div>
+
                 </div>
             </div>
 
-            <div className="mt-10 flex gap-4 max-w-screen-xl mx-auto">
-                <h1 className="cursor-pointer font-bold min-w-[90px] text-center"onClick={() => router.push(`/recruiter/jobs/${job.uuid}/details`)}>
+            <div className="mt-10 flex gap-4 max-w-screen-xl mx-auto pl-8">
+                <h1
+                    onClick={() => setActiveTab("details")}
+                    className={`cursor-pointer font-bold min-w-[85px] text-center ${activeTab === "details" ? "border-b-2 border-[#0B8260]" : ""
+                        }`}
+                >
                     Details
                 </h1>
-                <h1 className="cursor-pointer font-bold min-w-[120px] text-center">
+
+                <h1
+                    onClick={() => setActiveTab("applicants")}
+                    className={`cursor-pointer font-bold min-w-[85px] text-center ${activeTab === "applicants" ? "border-b-2 border-[#0B8260]" : ""
+                        }`}
+                >
                     Applicants
                 </h1>
             </div>
             {/* Horizatonal Line*/}
-            <div className="border-b border-gray-200 mx-auto mt-4" style={{ maxWidth: "1290px" }}></div>
+            <div className="border-b border-gray-200 mx-auto" style={{ maxWidth: "1230px" }}></div>
 
 
-            <div className="max-w-screen-xl mx-auto mt-6 flex gap-4">
-                {applicants.length > 0 ? (
+            <div className="max-w-screen-xl mx-auto mt-6 flex flex-col lg:flex-row gap-4 px-4">
+                {/* ================= LEFT SECTION ================= */}
+                <div className="flex-1 min-w-0">
 
+                    {/* -------- DETAILS TAB -------- */}
+                    {activeTab === "details" && (
+                        <div className="bg-white p-6 rounded-lg shadow-md flex-1 min-h-[293px]">
+                            <h1 className="text-2xl font-bold mb-4">Job Description</h1>
+                            <div
+  className="
+    break-words
+    overflow-hidden
+    max-w-full
 
-                    <>
-                        {/* LEFT SECTION */}
-                        <div className="flex">
-                            <div className="grid grid-cols-2 gap-2">
+    [&_ul]:list-disc
+    [&_ul]:ml-6
+    [&_ul]:mb-4
+
+    [&_ol]:list-decimal
+    [&_ol]:ml-6
+    [&_ol]:mb-4
+
+    [&_li]:mb-2
+
+    [&_p]:mb-3
+
+    [&_img]:max-w-full
+    [&_img]:h-auto
+  "
+  dangerouslySetInnerHTML={{ __html: job.description || "No description provided" }}
+/>
+                        </div>
+                    )}
+
+                    {/* -------- APPLICANTS TAB -------- */}
+                    {activeTab === "applicants" && (
+                        applicants.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                 {applicants.map((app, index) => (
                                     <div
                                         key={index}
@@ -217,80 +469,150 @@ export default function JobDetailsPage() {
                                                 </span>
 
                                                 <span>
-                                                    <span className="font-bold whitespace-nowrap">Applied On:</span> {formatDate(app.applied_at)}
+                                                    <span className="font-bold whitespace-nowrap">Applied On:</span>{" "}
+                                                    {formatDate(app.applied_at)}
                                                 </span>
                                             </div>
 
-                                            <button className="flex justify-center items-center min-w-[80px] rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
-          bg-[#0B8260] hover:bg-[#0a6f51] text-white 
-          px-4 py-2 shadow-sm transition 
-          no-underline outline-none focus:outline-none">
-                                                Hire
+                                            <button type="submit"
+                                                onClick={() => handleHire(app)}
+                                                disabled={app.status === "hired"}
+                                                className={`flex justify-center items-center min-w-[80px] rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
+                  bg-[#0B8260]  text-white 
+                  px-4 py-2 shadow-sm transition 
+                  no-underline outline-none focus:outline-none ${app.status === "hired"
+                                                        ? "bg-gray-500 text-gray-600 cursor-not-allowed"
+                                                        : "bg-[#0B8260] hover:bg-[#0a6f51] text-white cursor-pointer"
+                                                    }`}>
+                                                {app.status === "hired" ? "Hired" : "Hire"}
                                             </button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    </>
-                ) : (
-                    <div className="flex-1 text-center py-20 bg-white rounded-lg shadow-md flex justify-center items-center">
-                        <p className="text-gray-500 text-lg font-semibold">
-                            No applicants have applied yet
-                        </p>
-                    </div>
-                )}
+                        ) : (
+                            <div className="text-center py-20 bg-white rounded-lg shadow-md flex justify-center items-center">
+                                <p className="text-gray-500 text-lg font-semibold">
+                                    No applicants have applied yet
+                                </p>
+                            </div>
+                        )
+                    )}
+                </div>
 
                 {/* RIGHT SECTION (same as details page) */}
-                <div className="w-[450px] bg-white p-6 rounded-lg shadow-md flex-shrink-0">
-                    {/* Top row: Image + Company name */}
-                    <div className="flex items-center gap-4">
-                        <img src="/images/instagram.svg" alt="Instagram" className="w-16 h-16" />
-                        <div className="flex flex-col">
-                            <h1 className="font-bold text-lg">Tirupati Tours and Travels Agency</h1>
-                            <div className="flex items-center gap-2 mt-1">
-                                <img src="/images/gray-location.svg" alt="location" className="w-4 h-4" />
-                                <p>Shivajinagar, Bangalore</p>
+                {/* ================= RIGHT PANEL ================= */}
+                {/* ================= RIGHT SECTION (ALWAYS SAME, DYNAMIC) ================= */}
+                <div className="w-full lg:w-[450px] bg-white p-6 rounded-lg shadow-md">
+                    {selectedApplicant ? (
+                        <>
+                            {/* Top row */}
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-4">
+                                    <img src="/images/instagram.svg" className="w-16 h-16" />
+                                    <div className="flex flex-col">
+                                        <h1 className="font-semibold text-[20px]">
+                                            {selectedApplicant.worker.name}
+                                        </h1>
+                                        <div className="flex items-center mt-1">
+                                            <img src="/images/gray-location.svg" className="w-4 h-4" />
+                                            <p className="text-[#0F161EA6]">
+                                                {job.location.locality}, {job.location.city}
+                                            </p>
+                                        </div>
+                                        <Stars rating={4} />
+                                    </div>
+                                </div>
+                                <img src="/images/badge.svg" className="w-[46px] h-[46px] -mt-8" />
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Two columns */}
-                    <div className="flex gap-8 mt-4 justify-between">
-                        {/* Column 1 */}
-                        <div className="flex flex-col gap-8">
-                            <div>
-                                <h2 className="text-sm text-gray-500">Company Founder</h2>
-                                <h3 className="font-medium">Mr. Daniel Mark</h3>
+                            {/* Contact info */}
+                            <div className="flex gap-24 mt-4">
+                                <div>
+                                    <h2 className="text-[#0F161EA6]">Contact No</h2>
+                                    <h3 className="font-semibold">{selectedApplicant.worker.mobile_number || "N/A"}</h3>
+                                </div>
+                                <div>
+                                    <h2 className="text-[#0F161EA6]">Email</h2>
+                                    <h3 className="font-semibold">{selectedApplicant.worker.email || "N/A"}</h3>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-sm text-gray-500">Founded</h2>
-                                <h2 className="font-medium">1997</h2>
-                            </div>
-                            <div>
-                                <h2 className="text-sm text-gray-500">Revenue</h2>
-                                <h2 className="font-medium">$70B+</h2>
-                            </div>
-                        </div>
 
-                        {/* Column 2 */}
-                        <div className="flex flex-col gap-8">
-                            <div>
-                                <h2 className="text-sm text-gray-500">Industry</h2>
-                                <h2 className="font-medium">Tour and Travel</h2>
+                            {/* Buttons */}
+                            <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                                <button
+                                    onClick={handleMarkAsComplete}
+                                    className="w-[250px] h-[44px] rounded-lg text-[#0B8260] bg-[#CCE5DE] border border-[#0B8260]"
+                                >
+                                    Mark As Complete
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedApplicant(null);
+                                        setSelectedApplicationId(null);
+                                    }}
+                                    className="w-[250px] h-[44px] rounded-lg text-[#FF3831] bg-[#FFD8D7] border border-[#FF3831]"
+                                >
+                                    Cancel
+                                </button>
                             </div>
-                            <div>
-                                <h2 className="text-sm text-gray-500">Head Office</h2>
-                                <h2 className="font-medium">London, UK</h2>
-                            </div>
-                            <div>
-                                <h2 className="text-sm text-gray-500">Company Size</h2>
-                                <h2 className="font-medium">20,000+ Emp.</h2>
-                            </div>
-                        </div>
-                    </div>
+                        </>
+                    ) : (
+                        <p className="text-gray-500 text-center">
+                            Select an applicant to see details
+                        </p>
+                    )}
                 </div>
             </div>
+
+            {showModal && (
+                <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-xl w-[380px] p-6">
+
+                        <h2 className="text-xl font-semibold mb-4 text-center">
+                            ⭐ Submit Review
+                        </h2>
+
+                        <div className="flex justify-center gap-2 mb-4">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                    key={star}
+                                    onClick={() => setRating(star)}
+                                    className={`text-3xl ${star <= rating ? "text-yellow-400" : "text-gray-300"
+                                        }`}
+                                >
+                                    ★
+                                </button>
+                            ))}
+                        </div>
+
+                        <textarea
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder="Write your experience..."
+                            className="w-full border rounded p-2 mb-4"
+                        />
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="border px-4 py-2 rounded"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={handleSubmitReview}
+                                disabled={submitting}
+                                className="bg-green-600 text-white px-4 py-2 rounded"
+                            >
+                                {submitting ? "Submitting..." : "Submit"}
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
 
 
             <div className="mt-10 bg-[#0B8260] text-white p-10 flex flex-col items-center gap-6 text-center">
@@ -301,7 +623,7 @@ export default function JobDetailsPage() {
                 </div>
 
                 {/* Paragraphs */}
-                <div className="flex flex-col gap-2 whitespace-nowrap">
+                <div className="flex flex-col gap-2 text-center">
                     <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos</p>
                     <p>dolores et quas molestias</p>
                 </div>

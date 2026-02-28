@@ -22,32 +22,27 @@ export default function StepWelcome({ experience, onNext, onBack }: Props) {
   return (
     <StepLayout
       footer={
-        <div className="flex justify-between gap-4 w-full">
-          {/* Back */}
-          <button
-            onClick={onBack}
-            className="flex justify-center items-center w-full rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
-              text-black 
-              px-4 py-2 shadow-sm transition 
-              no-underline outline-none focus:outline-none"
-          >
-            Back
-          </button>
-
-          {/* Continue */}
-          <button
-            onClick={onNext}
-            className="flex justify-center items-center w-full rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
-              bg-[#0B8260] hover:bg-[#0a6f51] text-white 
-              px-4 py-2 shadow-sm transition 
-              no-underline outline-none focus:outline-none"
-          >
-            Continue
-          </button>
-        </div>
+        // Only the main "Continue" button in the footer
+        <button
+          onClick={onNext}
+          className="flex justify-center items-center w-full rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
+            bg-[#0B8260] hover:bg-[#0a6f51] text-white 
+            px-4 py-2 shadow-sm transition"
+        >
+          Continue
+        </button>
       }
     >
-      <div className="text-center">
+      <div className="text-center relative">
+        {/* Back button in top-left */}
+        <button
+          onClick={onBack}
+          className="fixed top-4 left-4 z-50 text-black font-medium px-4 py-2 rounded-[4px] 
+    shadow-sm hover:bg-gray-100 transition outline-none focus:outline-none"
+        >
+          Back
+        </button>
+
         <h2 className="text-2xl font-semibold text-[#1B2021] mb-4">
           Yay, glad you’re here!
         </h2>

@@ -132,15 +132,8 @@ export default function RecruiterJobsPage() {
                 </p>
               </div>
 
-              <button
-                className="flex items-center justify-center shrink-0"
-                onClick={() => router.push(`/recruiter/jobs/${job.uuid}/edit`)}
-              >
-                <img
-                  src="/images/edit-btn.svg"
-                  alt="Edit"
-                  style={{ width: "16px", height: "16px" }}
-                />
+              <button className="w-10 h-10 flex shrink-0 bg-[#F1F1F1] rounded-full flex justify-center items-center cursor-pointer"onClick={() => router.push(`/recruiter/jobs/${job.uuid}/edit`)}>
+                <img src="/images/edit-btn.svg" width={16} />
               </button>
             </div>
 

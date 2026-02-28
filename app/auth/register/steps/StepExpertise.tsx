@@ -135,9 +135,9 @@ export default function StepExpertise({
         <div className="flex justify-between gap-4 w-full">
           <button
             onClick={onBack}
-            className="flex justify-center items-center w-full rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
-              text-black px-4 py-2 shadow-sm transition 
-              no-underline outline-none focus:outline-none"
+            className="fixed top-4 left-4 z-50 text-black font-medium px-4 py-2 rounded-[4px] 
+    shadow-sm hover:bg-gray-100 transition 
+    outline-none focus:outline-none"
           >
             Back
           </button>
@@ -245,38 +245,34 @@ export default function StepExpertise({
             )}
           </div>
         </div>
+        
         {/* ================= SUB CATEGORIES ================= */}
-        {selectedCategory && (
-          <div className="mt-8 w-full flex  gap-[8px] justify-center">
-            {loadingSubs && <SubCategorySkeleton count={6} />}
+        <div className="mt-8 w-full flex gap-[8px] justify-center overflow-x-auto scrollbar-hide">
+          {(loadingSubs || !selectedCategory) && <SubCategorySkeleton count={6} />}
 
-            {!loadingSubs &&
-              subCategories.map((item) => {
-                const isSelected = selectedSubs.includes(item.id);
+          {!loadingSubs && selectedCategory && subCategories.map((item) => {
+            const isSelected = selectedSubs.includes(item.id);
 
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => toggleSubCategory(item.id)}
-                    className={`
-                    w-[183px] h-[43px]
-                    px-[15px] py-[10px]
-                    rounded-[28px]
-                    text-sm transition
-                    whitespace-nowrap
-                    ${isSelected
-                        ? "bg-[#EDFFFA] text-[#0B8260]"
-                        : "bg-[#F5F7FA] text-[#333333]"
-                      }
-                  `}
-                  >
-                    {item.name}
-                  </button>
-                );
-              })}
-          </div>
-        )}
+            return (
+              <button
+                key={item.id}
+                onClick={() => toggleSubCategory(item.id)}
+                className={`
+          flex-shrink-0
+          w-[183px] h-[43px] px-[15px] py-[10px] rounded-[28px]
+          text-sm transition whitespace-nowrap
+          ${isSelected
+                    ? "bg-[#EDFFFA] text-[#0B8260]"
+                    : "bg-[#F5F7FA] text-[#333333]"
+                  }
+        `}
+              >
+                {item.name}
+              </button>
+            );
+          })}
         </div>
-      </StepLayout>
-      );
+      </div>
+    </StepLayout>
+  );
 }

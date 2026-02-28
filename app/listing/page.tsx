@@ -12,9 +12,9 @@ export default function ListingPage() {
   const [filters, setFilters] = useState({
     keyword: "",
     pay_type: "",
-    city: "",
+    city: [] as string[],
     shift_timing: "",
-    work_type: "",
+    work_type: [] as string[],
     min_pay: null,
     max_pay: null,
   });
@@ -33,8 +33,11 @@ export default function ListingPage() {
         setError(false);
 
         const params = new URLSearchParams();
+
         Object.entries(filters).forEach(([key, value]) => {
-          if (value !== "" && value !== null) {
+          if (Array.isArray(value) && value.length > 0) {
+            params.append(key, value.join(",")); // city=kolkata,mumbai
+          } else if (value !== "" && value !== null) {
             params.append(key, String(value));
           }
         });
@@ -59,7 +62,7 @@ export default function ListingPage() {
     }
 
     fetchJobs();
-  }, [filters,sortBy,perPage]);
+  }, [filters, sortBy, perPage]);
 
   // ✅ extract unique cities from posts
   const cities = useMemo(() => {
@@ -77,7 +80,7 @@ export default function ListingPage() {
   return (
     <>
       <BannerSection />
-      
+
       {error && (
         <section className="py-10">
           <div className="max-w-[1400px] mx-auto px-4">
@@ -95,7 +98,7 @@ export default function ListingPage() {
             <FilterSidebar
               filters={filters}
               setFilters={setFilters}
-              cities={cities}
+              
             />
           </div>
 
@@ -107,7 +110,7 @@ export default function ListingPage() {
               <div className="flex items-center gap-3">
                 {/* Sort By Dropdown */}
                 <div className="relative w-40">
-                  <select className="block w-full border border-gray-200 rounded px-3 py-2 text-sm appearance-none"value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                  <select className="block w-full border border-gray-200 rounded px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-0" value={sortBy} onChange={e => setSortBy(e.target.value)}>
                     <option>Sort by (Default)</option>
                     <option value="latest">Latest</option>
                     <option value="salary_high">Salary: High to Low</option>
@@ -120,7 +123,7 @@ export default function ListingPage() {
 
                 {/* Per Page Dropdown */}
                 <div className="relative" style={{ minWidth: "6rem" }}>
-                  <select className="block w-full border border-gray-200 rounded px-3 py-2 text-sm appearance-none"value={perPage} onChange={(e)=>setPerPage(Number(e.target.value))}>
+                  <select className="block w-full border border-gray-200 rounded px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-0" value={perPage} onChange={(e) => setPerPage(Number(e.target.value))}>
                     <option value={10}>10 Per</option>
                     <option value={20}>20 Per</option>
                     <option value={30}>30 Per</option>
@@ -138,7 +141,10 @@ export default function ListingPage() {
                   <JobSkeleton key={idx} />
                 ))}
               </div>
-            ) : (
+            ) : posts.length === 0 ? (
+              <div className="w-full py-10 text-center text-gray-500 text-lg">
+                No jobs found matching your filters.
+              </div>) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {posts.map((post) => (
                   <JobCard

@@ -141,10 +141,6 @@ export default function AppliedJobs() {
                     : ""}
                 </p>
               </div>
-
-              <button className="w-10 h-10 bg-[#F1F1F1] rounded-full flex justify-center items-center shrink-0">
-                <img src="/images/edit-btn.svg" width={16} />
-              </button>
             </div>
 
             {/* DESCRIPTION */}

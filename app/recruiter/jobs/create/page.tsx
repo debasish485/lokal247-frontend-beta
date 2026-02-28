@@ -23,7 +23,7 @@ export default function CreateJobPage() {
   const [payType, setPayType] = useState<"daily" | "monthly">("daily");
   const [payAmount, setPayAmount] = useState<number | "">("");
   const [categoryId, setCategoryId] = useState<number>(71);
-  const [workType, setWorkType] = useState<"wfh" | "who" | "hybrid">("wfh");
+  const [workType, setWorkType] = useState<"wfh" | "wfo" | "hybrid">("wfh");
   const [shiftTiming, setShiftTiming] = useState<"day" | "night">("day");
   const [startTime, setStartTime] = useState<string>("09:00");
   const [endTime, setEndTime] = useState<string>("18:00");
@@ -55,7 +55,7 @@ export default function CreateJobPage() {
         city,
         locality,
         pay_type: payType,
-        pay_amount: Number(payAmount),
+        pay_amount: payAmount ? Number(payAmount) : 0,
         work_type: workType,
         shift_timing: shiftTiming,
         start_time: startTime,
@@ -101,17 +101,15 @@ export default function CreateJobPage() {
     }
   };
   const handleDescriptionChange = (val: string) => {
-    const clean = val.replace(/\s+/g, " ").trim();
+  if (val.length > 1000) {
+    setError("Description too long (max 1000 chars)");
+    setDescription(val.slice(0, 1000));
+    return;
+  }
 
-    if (clean.length > 1000) {
-      setError("Description too long (max 1000 chars)");
-      setDescription(clean.slice(0, 10000));
-      return;
-    }
-
-    setError("");
-    setDescription(clean);
-  };
+  setError("");
+  setDescription(val); 
+};
 
   const selectWrapperClass = "relative w-full";
   const selectClass =
@@ -249,12 +247,12 @@ export default function CreateJobPage() {
                 name="work_type"
                 value={workType}
                 onChange={(e) =>
-                  setWorkType(e.target.value as "wfh" | "who" | "hybrid")
+                  setWorkType(e.target.value as "wfh" | "wfo" | "hybrid")
                 }
                 className={`${selectClass} text-[#30363F]`}
               >
                 <option value="wfh">Work From Home</option>
-                <option value="who">Work From Office</option>
+                <option value="wfo">Work From Office</option>
                 <option value="hybrid">Hybrid</option>
               </select>
               <span className={arrowClass}>▼</span>
@@ -331,7 +329,7 @@ export default function CreateJobPage() {
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
-                <option value="any">Other</option>
+                <option value="other">Other</option>
               </select>
               <span className={arrowClass}>▼</span>
             </div>

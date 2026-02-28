@@ -16,6 +16,7 @@ export async function GET() {
     const res = await fetch(`${BASE_URL}/api/worker/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
+        Accept:"application/json",
       },
       cache: "no-store",
     });
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
       method: "POST", // Laravel expects POST
       headers: {
         Authorization: `Bearer ${token}`,
+        Accept:"application/json",
       },
       body: formData,
     });

@@ -7,14 +7,14 @@ export default function BannerSection() {
       <div className="w-full h-52 sm:h-64 md:h-80 lg:h-96 bg-cover bg-center">
         {/* Dark green overlay */}
         <div
-          className="w-full h-full bg-emerald-700/95 flex items-center"
+          className="w-full h-full bg-emerald-700/95 flex items-center px-4"
           style={{ backgroundImage: "url('./images/bg-sub-banner.png')" }}
           role="img"
           aria-label="Decorative banner background"
         >
           {/* Content container */}
-          <div className="max-w-[1400px] w-full mx-auto">
-            <div>
+          <div className="w-full">
+            
               {/* Heading */}
               <h1 className="text-white font-extrabold leading-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
                 Search Jobs
@@ -32,7 +32,6 @@ export default function BannerSection() {
                   <li className="font-medium">Search jobs</li>
                 </ol>
               </nav>
-            </div>
           </div>
         </div>
       </div>

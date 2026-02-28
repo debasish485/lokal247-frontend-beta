@@ -13,7 +13,7 @@ export async function GET(
     const token = cookieStore.get("auth_token")?.value;
     console.log("TOKEN =", token);
     const backendRes = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/recruiter/job-posts/${uuid}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/job-posts/${uuid}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

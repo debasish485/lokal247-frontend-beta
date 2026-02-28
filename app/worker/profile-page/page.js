@@ -14,7 +14,7 @@ export default function WorkerProfilePage() {
   const [formData, setFormData] = useState(null);
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState(tabFromUrl || "profile");
+  const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
   const [photo, setPhoto] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -24,6 +24,13 @@ export default function WorkerProfilePage() {
 
   const router = useRouter();
   const EMERALD = "oklch(50.8% 0.118 165.612)";
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -86,13 +93,21 @@ export default function WorkerProfilePage() {
 
       const fd = new FormData();
       fd.append("name", formData.name || "");
-      fd.append("email", formData.email || "");
+      if (formData.email) {
+        fd.append("email", formData.email);
+      }
       fd.append("mobile_number", formData.mobile_number || "");
       fd.append("gender", formData.gender || "");
       fd.append("age", formData.age || "");
-      fd.append("work_preference", formData.work?.preference || "");
-      fd.append("work_duration_type", formData.work?.duration_type || "");
-      if (photo) fd.append("profile_photo", photo);
+      if (formData.work?.preference) {
+        fd.append("work_preference", formData.work.preference);
+      }
+      if (formData.work?.duration_type) {
+        fd.append("work_duration_type", formData.work.duration_type);
+      }
+      if (photo) {
+        fd.append("profile_photo", photo);
+      }
 
       const res = await fetch("/api/worker/profile", {
         method: "POST",
@@ -164,6 +179,11 @@ export default function WorkerProfilePage() {
 
     return <div className="flex gap-1">{stars}</div>;
   }
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    router.push(`?tab=${tab}`, { shallow: true }); // update URL without reload
+  };
 
 
   if (loading) return <EditWorkerProfileSkeleton />
@@ -270,11 +290,11 @@ export default function WorkerProfilePage() {
 
           {/* MENU */}
           <div className="flex flex-col gap-[10px] w-[350px]">
-            <MenuItem label="My Profile" tab="profile" icon="/images/my-profile.svg" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <MenuItem label="My Preferences" tab="preferences" icon="/images/preferences.svg" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <MenuItem label="My Job History" tab="jobs" icon="/images/my-job-history.svg" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <MenuItem label="Help Centre" tab="help" icon="/images/help-center.svg" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <MenuItem label="Logout" tab="logout" activeTab={activeTab} setActiveTab={setActiveTab} handleLogout={handleLogout} />
+            <MenuItem label="My Profile" tab="profile" icon="/images/my-profile.svg" activeTab={activeTab} setActiveTab={setActiveTab} handleTabChange={handleTabChange} />
+            <MenuItem label="My Preferences" tab="preferences" icon="/images/preferences.svg" activeTab={activeTab} setActiveTab={setActiveTab} handleTabChange={handleTabChange} />
+            <MenuItem label="My Job History" tab="jobs" icon="/images/my-job-history.svg" activeTab={activeTab} setActiveTab={setActiveTab} handleTabChange={handleTabChange} />
+            <MenuItem label="Help Centre" tab="help" icon="/images/help-center.svg" activeTab={activeTab} setActiveTab={setActiveTab} handleTabChange={handleTabChange} />
+            <MenuItem label="Logout" tab="logout" activeTab={activeTab} setActiveTab={setActiveTab} handleLogout={handleLogout} handleTabChange={handleTabChange} />
           </div>
         </div>
 
@@ -302,7 +322,7 @@ export default function WorkerProfilePage() {
 }
 
 /* MENU ITEM */
-function MenuItem({ label, tab, icon, activeTab, setActiveTab, handleLogout }) {
+function MenuItem({ label, tab, icon, activeTab, setActiveTab, handleTabChange, handleLogout }) {
   const isActive = activeTab === tab;
   const isLogout = tab === "logout";
 
@@ -312,7 +332,7 @@ function MenuItem({ label, tab, icon, activeTab, setActiveTab, handleLogout }) {
         if (isLogout) {
           handleLogout();
         } else {
-          setActiveTab(tab);
+          handleTabChange(tab);
         }
       }}
       className={`w-full h-[75px] rounded-[10px] cursor-pointer

@@ -31,10 +31,9 @@ export default function StepAvailability({
           {/* Back */}
           <button
             onClick={onBack}
-            className="flex justify-center items-center w-full rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
-              text-black 
-              px-4 py-2 shadow-sm transition 
-              no-underline outline-none focus:outline-none"
+            className="fixed top-4 left-4 z-50 text-black font-medium px-4 py-2 rounded-[4px] 
+    shadow-sm hover:bg-gray-100 transition 
+    outline-none focus:outline-none"
           >
             Back
           </button>
@@ -66,10 +65,9 @@ export default function StepAvailability({
                 setWorkerData((prev: any) => ({ ...prev, availability: opt.id }))
               }
               className={`cursor-pointer border rounded-xl p-4 text-center transition
-                ${
-                  selectedValue === opt.id
-                    ? "border-emerald-700 bg-emerald-50"
-                    : "border-gray-200 hover:border-emerald-400"
+                ${selectedValue === opt.id
+                  ? "border-emerald-700 bg-emerald-50"
+                  : "border-gray-200 hover:border-emerald-400"
                 }`}
             >
               <Image
