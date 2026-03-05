@@ -52,7 +52,7 @@ export default function DoubleRangeSlider({
       {/* SLIDER */}
       <div className="relative h-6">
         {/* Track */}
-        <div className="absolute top-1/2 h-2 w-full -translate-y-1/2 rounded-full"style={{ backgroundColor: "#0B8260" }} />
+        <div className="absolute top-1/2 h-2 w-full -translate-y-1/2 rounded-full"style={{ backgroundColor: "#D1D5DB" }} />
 
         {/* Range */}
         <div

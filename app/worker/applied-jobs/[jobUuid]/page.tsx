@@ -168,15 +168,22 @@ const handleMarkAsComplete = async () => {
           <div className="w-full md:w-1/2 flex justify-center md:justify-end px-4">
             <div className="flex flex-col gap-4 max-w-[600px] mt-2 w-full md:pr-6">
 
-              <div className="text-sm text-gray-400 flex items-center gap-2">
+              <div className="text-sm text-gray-400 flex items-center gap-2 mt-4">
+                <span
+                  onClick={() => router.push("/")}
+                  className="cursor-pointer text-[#0B8260]"
+                >
+                  Home
+                </span>
+                <span>/</span>
                 <span
                   onClick={() => router.push("/worker/applied-jobs")}
-                  className="cursor-pointer hover:underline text-[#0B8260]"
+                  className="cursor-pointer text-[#0B8260]"
                 >
                   Applied Jobs
                 </span>
                 <span>/</span>
-                <span className="text-gray-500">Job Details</span>
+                <span className="text-white">Job Details</span>
               </div>
 
               <div className="mt-8">

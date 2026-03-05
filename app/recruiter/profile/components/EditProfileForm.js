@@ -1,6 +1,6 @@
 "use client";
 
-export default function EditProfileForm({ formData, handleChange, handleUpdate, EMERALD, updateLoading, message }) {
+export default function EditProfileForm({ formData, handleChange, handleUpdate, EMERALD, updateLoading }) {
   if (!formData) return null;
 
   const inputClass =
@@ -11,21 +11,7 @@ export default function EditProfileForm({ formData, handleChange, handleUpdate, 
 
   return (
     <div className="relative">
-      {message && (
-        <div
-          className={`absolute top-0 right-0 z-20 flex items-center gap-2
-      rounded-md px-3 py-2 shadow border text-sm
-      ${message.type === "success"
-              ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-              : "bg-red-50 border-red-300 text-red-700"
-            }
-    `}
-        >
-          {message.type === "success" ? "✅" : "❌"}
-          <span>{message.text}</span>
-        </div>
-      )}
-
+      
       {/* Heading */}
       <h2 className="text-xl font-semibold text-gray-800 mb-6">My Profile</h2>
 

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { ReactNode } from "react";
+import { Toaster } from "react-hot-toast";
 
 type RootClientWrapperProps = {
   children: ReactNode;
@@ -31,6 +32,8 @@ export default function RootClientWrapper({ children }: RootClientWrapperProps) 
       {!hideLayout && <Navbar />}
       <main>{children}</main>
       {!hideLayout && <Footer />}
+      {/* GLOBAL TOAST */}
+      <Toaster position="top-right" reverseOrder={false} />
     </>
   );
 

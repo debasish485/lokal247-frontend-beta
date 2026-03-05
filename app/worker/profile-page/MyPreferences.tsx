@@ -3,7 +3,8 @@
 import { useEffect, useState, ChangeEvent } from "react";
 import Multiselect from "multiselect-react-dropdown";
 import { IoClose } from "react-icons/io5";
-
+import PreferencesSkeleton from "@/app/components/skeletons/PreferencesSkeleton";
+import toast from "react-hot-toast";
 
 
 /* ---------- TYPES ---------- */
@@ -74,7 +75,6 @@ export default function Preferences() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showAllModal, setShowAllModal] = useState(false);
 
   const capitalizeFirst = (str: string) =>
@@ -183,19 +183,20 @@ export default function Preferences() {
 
       const data = await res.json();
 
-      if (data.status) {
-        setMessage({ type: "success", text: "Preferences updated successfully" });
-      } else {
-        setMessage({ type: "error", text: "Preferences update failed" });
+      if (!res.ok || !data.status) {
+        throw new Error(data?.message || "Update failed");
       }
-
-      setTimeout(() => setMessage(null), 3000);
+      toast.success("Your preferences have been updated successfully");
+    }
+    catch (err) {
+      console.error(err);
+      toast.error("Unable to update your preferences. Please try again");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <p>Loading preferences...</p>;
+  if (loading) return <PreferencesSkeleton />;
 
   const selectWrapperClass = "relative w-full";
   const selectClass =
@@ -205,18 +206,7 @@ export default function Preferences() {
 
   return (
     <div className="relative">
-      {message && (
-        <div
-          className={`absolute top-0 right-0 z-20 flex items-center gap-2
-          rounded-md px-3 py-2 shadow border text-sm
-          ${message.type === "success"
-              ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-              : "bg-red-50 border-red-300 text-red-700"}`}
-        >
-          <span>{message.type === "success" ? "✅" : "❌"}</span>
-          <span>{message.text}</span>
-        </div>
-      )}
+
 
       <h2 className="text-xl font-semibold text-gray-800 mb-6">
         My Preferences
@@ -274,7 +264,7 @@ export default function Preferences() {
                 <IoClose size={16} color="red" />
               }
               style={{
-                multiselectContainer: { minHeight: "56px",position:"relative" },
+                multiselectContainer: { minHeight: "56px", position: "relative" },
                 searchBox: {
                   border: "1px solid #E7EDF1",
                   borderRadius: "8px",
@@ -282,16 +272,16 @@ export default function Preferences() {
                   fontSize: "14px",
                   height: "56px",
                   overflow: "hidden",
-                  flexWrap:"nowrap",
-                  display:"flex",
-                  alignItems:"center"
+                  flexWrap: "nowrap",
+                  display: "flex",
+                  alignItems: "center"
                 },
                 chips: {
                   background: "#D1FAE5",
                   color: "#047857",
                   fontSize: "12px",
                   padding: "2px 6px",
-                  
+
                   whitespace: "nowrap",
                   textOverflow: "ellipsis"
                 },

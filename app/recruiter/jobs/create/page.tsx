@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 import JobDescriptionEditor from "../../../components/JobDescriptionEditor";
+import toast from "react-hot-toast";
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
@@ -12,8 +13,7 @@ if (!RECAPTCHA_SITE_KEY) {
 
 export default function CreateJobPage() {
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+  
 
   // Controlled inputs
   const [title, setTitle] = useState<string>("");
@@ -36,8 +36,7 @@ export default function CreateJobPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setSuccess("");
-    setError("");
+    
 
     try {
       // ✅ Execute reCAPTCHA
@@ -82,8 +81,7 @@ export default function CreateJobPage() {
         throw new Error(data.message || "Failed to create job");
       }
 
-      setSuccess(data.message || "Job created successfully");
-
+      toast.success(data.message || "Job created successfully");
       // Reset form
       setTitle("");
       setDescription("");
@@ -95,19 +93,16 @@ export default function CreateJobPage() {
       recaptchaRef.current?.reset();
     } catch (err: any) {
       console.error("Create job error:", err);
-      setError(err.message || "Something went wrong");
+      toast.error(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
   const handleDescriptionChange = (val: string) => {
   if (val.length > 1000) {
-    setError("Description too long (max 1000 chars)");
     setDescription(val.slice(0, 1000));
     return;
   }
-
-  setError("");
   setDescription(val); 
 };
 
@@ -359,11 +354,7 @@ export default function CreateJobPage() {
         </div>
 
 
-        {/* Success/Error */}
-        {success && (
-          <p className="text-sm text-emerald-700 font-medium">{success}</p>
-        )}
-        {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
+        
 
         {/* Invisible reCAPTCHA */}
         <ReCAPTCHA

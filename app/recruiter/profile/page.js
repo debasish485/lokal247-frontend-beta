@@ -5,15 +5,18 @@ import { useEffect, useState } from "react";
 import RecruiterPanelPage from "../panel/page";
 import Sidebar from "./components/Sidebar";
 import { useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function RecruiterProfilePage() {
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
-  const [message, setMessage] = useState (null);
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [jobCount, setJobCount] = useState(0);
   const searchParams = useSearchParams();
+
+
 
 
   const router = useRouter();
@@ -52,6 +55,25 @@ export default function RecruiterProfilePage() {
     fetchProfile();
   }, [router]);
 
+  useEffect(() => {
+  const fetchJobCount = async () => {
+    try {
+      const res = await fetch("/api/recruiter/jobs", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      const data = await res.json();
+      setJobCount(data.data?.length || 0);
+    } catch (err) {
+      console.error("Job count error:", err);
+    }
+  };
+
+  fetchJobCount();
+}, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -69,12 +91,10 @@ export default function RecruiterProfilePage() {
       const data = await res.json();
       setProfile(data.data);
       setFormData(data.data);
-      setMessage({ type: "success", text: "Profile updated successfully" });
-      setTimeout(() => setMessage(null), 3000);
+      toast.success("Your profile has been updated successfully");
     } catch (err) {
       console.error("Update error:", err);
-      setMessage({ type: "error", text: "Failed to update profile" });
-      setTimeout(() => setMessage(null), 3000);
+      toast.error("Unable to update your profile. Please try again");
     } finally {
       setUpdateLoading(false);
     }
@@ -83,6 +103,9 @@ export default function RecruiterProfilePage() {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      toast.success("Logged out successfully");
+    } catch (err) {
+      toast.error("Logout failed");
     } finally {
       router.replace("/recruiter/auth/signin");
       router.refresh();
@@ -106,19 +129,20 @@ export default function RecruiterProfilePage() {
           handleLogout={handleLogout}
           EMERALD={EMERALD}
           handleTabChange={handleTabChange}
+          jobCount={jobCount}
         />
 
         {/* RIGHT COLUMN */}
         <div className="flex-1 bg-white rounded-xl shadow-md p-6 flex flex-col gap-6 min-w-0 relative">
-          
+
           <RecruiterPanelPage
             activeTab={activeTab}
             formData={formData}
             handleChange={handleChange}
             handleUpdate={handleUpdate}
             EMERALD={EMERALD}
-            message={message}
             updateLoading={updateLoading}
+            setJobCount={setJobCount}
           />
         </div>
       </div>

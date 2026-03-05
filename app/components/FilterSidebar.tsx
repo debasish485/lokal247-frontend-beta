@@ -91,14 +91,18 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
   return (
     <aside className="w-full flex-shrink-0 h-auto overflow-auto p-4 space-y-0 bg-white rounded-lg shadow-md border border-gray-200">
       {/* Header */}
-      <div className="flex justify-between items-center pb-6 mb-6 border-b border-gray-200">
-        <h2 className="text-[20px] font-semibold leading-[24px] font-sans">Search Filter</h2>
-        <button
-          onClick={handleClear}
-          className="text-[15px] font-normal text-[#0F161EA6] hover:underline"
-        >
-          Clear All
-        </button>
+      <div className="-mx-4 border-b border-gray-200 pb-4 mb-4 px-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-[20px] font-semibold leading-[24px] font-sans">
+            Search Filter
+          </h2>
+          <button
+            onClick={handleClear}
+            className="text-[15px] font-normal text-[#0F161EA6] cursor-pointer"
+          >
+            Clear All
+          </button>
+        </div>
       </div>
 
       {/* Keyword */}
@@ -107,13 +111,13 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
         value={filters.keyword}
         onChange={e => setFilters({ ...filters, keyword: e.target.value })}
         placeholder="Search by keywords..."
-        className="w-full h-[56px] px-3 py-3 border rounded-lg border-gray-300 text-sm placeholder-gray-400 focus:outline-none focus:ring-0"
+        className="w-full h-[56px] px-3 py-1 border rounded-lg border-gray-300 text-sm placeholder-gray-400 focus:outline-none focus:ring-0"
       />
 
       {/* Payment */}
       <div className="relative">
         <div
-          className="w-full h-[56px] px-3 flex justify-between items-center cursor-pointer font-bold"
+          className="w-full h-[56px] px-1 flex justify-between items-center cursor-pointer font-bold"
 
           onClick={() => toggleDropdown("payment")}
         >
@@ -146,13 +150,12 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
           </div>
         )}
       </div>
-      <div className="border-b border-gray-200"></div>
-
+      <div className="-ml-4 pr-4 border-b border-gray-200"></div>
 
       {/* City */}
       <div className="relative">
         <div
-          className="w-full h-[48px] px-3 py-2 flex justify-between items-center cursor-pointer font-bold"
+          className="w-full h-[48px] px-1 py-1 flex justify-between items-center cursor-pointer font-bold"
           onClick={() => toggleDropdown("city")}
         >
           <span className="text-sm text-gray-900">
@@ -188,12 +191,13 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
           </div>
         )}
       </div>
-      <div className="border-b border-gray-200"></div>
+
+      <div className="-ml-4 pr-4 border-b border-gray-200"></div>
 
       {/* Shift */}
       <div className="relative">
         <div
-          className="w-full h-[56px] px-3 py-3 flex justify-between items-center cursor-pointer font-bold"
+          className="w-full h-[56px] px-1 py-1 flex justify-between items-center cursor-pointer font-bold"
           onClick={() => toggleDropdown("shift")}
         >
           <span className="text-sm text-gray-900">
@@ -221,11 +225,12 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
           </div>
         )}
       </div>
-      <div className="border-b border-gray-200"></div>
+
+      <div className="-ml-4 pr-4 border-b border-gray-200"></div>
 
       {/* Price Range */}
       <div className="space-y-2">
-        <div className="w-full h-[56px] px-3 py-3 font-bold flex justify-between items-center">
+        <div className="w-full h-[56px] px-1 py-1 font-bold flex justify-between items-center">
           <span className="text-sm text-gray-900">Price Range</span>
         </div>
 
@@ -237,12 +242,12 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
           }
         />
       </div>
-      <div className="border-b border-gray-200"></div>
+
 
       {/* Job Type */}
       <div className="relative">
         <div
-          className="w-full h-[48px] px-3 py-3 flex justify-between items-center cursor-pointer font-bold"
+          className="w-full h-[48px] px-1 py-1 flex justify-between items-center cursor-pointer font-bold"
           onClick={() => toggleDropdown("job")}
         >
           <span className="text-sm text-gray-900">
@@ -276,7 +281,8 @@ export default function FilterSidebar({ filters, setFilters }: FilterSidebarProp
           </div>
         )}
       </div>
-      <div className="border-b border-gray-200 mb-2"></div>
+
+      <div className="-ml-4 pr-4 border-b border-gray-200 mb-4"></div>
 
       <NewsletterCard />
     </aside>

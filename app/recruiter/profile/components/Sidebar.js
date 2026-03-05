@@ -1,6 +1,6 @@
 "use client";
 
-export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout,handleTabChange, EMERALD }) {
+export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout,handleTabChange, EMERALD,jobCount }) {
 
 
   function Stars({ rating }) {
@@ -108,7 +108,7 @@ export default function Sidebar({ profile, activeTab, setActiveTab, handleLogout
           handleTabChange={handleTabChange}
         />
         <SidebarItem
-          label="Posted Jobs"
+          label={`Posted Jobs (${jobCount})`}
           tab="postedjobs"
           icon="/images/posted_job.svg"
           activeTab={activeTab}

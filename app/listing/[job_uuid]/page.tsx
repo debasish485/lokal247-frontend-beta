@@ -78,12 +78,12 @@ export default async function JobDetailsPage({ params }: PageProps) {
   return (
     <div>
       <section className="relative bg-[#073B3A] overflow-hidden min-h-[380px] lg:min-h-[450px]">
-        <div className="max-w-[1400px] mx-auto px-6 py-16 lg:py-20">
+        <div className="max-w-[1400px] mx-auto px-6 pt-16 pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
             {/* LEFT CONTENT */}
             <div className="text-white z-10 max-w-xl">
-              <nav className="text-sm text-gray-300 mb-4">
+              <nav className="text-sm text-gray-300  mt-16 mb-8">
                 <Link href="/" className="hover:text-white">
                   Home
                 </Link>
@@ -100,7 +100,7 @@ export default async function JobDetailsPage({ params }: PageProps) {
                 </span>
               </nav>
 
-              <div className="flex flex-col gap-3 mt-16">
+              <div className="flex flex-col gap-4">
                 <span className="inline-block w-fit bg-white text-black text-xs font-semibold px-4 py-1 rounded-full">
                   {formatJobType(job.schedule?.work_type)}
                 </span>
@@ -133,7 +133,7 @@ export default async function JobDetailsPage({ params }: PageProps) {
                 </p>
               </div>
               {/* INFO */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm mt-8">
                 {["Department", "Location", "Salary"].map((label, idx) => {
                   let value = "";
                   if (label === "Department") value = job.category?.name || "-";

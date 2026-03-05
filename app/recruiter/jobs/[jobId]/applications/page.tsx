@@ -31,41 +31,40 @@ export default function JobDetailsPage() {
     const [activeTab, setActiveTab] = useState<"details" | "applicants">("details");
 
     const router = useRouter();
-    useEffect(() => {
+    const fetchJob = async () => {
         if (!jobId) return;
 
-        const fetchJob = async () => {
+        try {
             setLoading(true);
-            try {
-                const res = await fetch(
-                    `/api/recruiter/jobs/${jobId}/applicants`
-                );
 
-                if (!res.ok) throw new Error("Failed to fetch job details");
+            const res = await fetch(`/api/recruiter/jobs/${jobId}/applications`);
 
-                const data = await res.json();
+            if (!res.ok) throw new Error("Failed to fetch job details");
 
-                // 👇 according to your API response
-                setJob(data.job);
-                setApplicants(data.applicant);
+            const data = await res.json();
 
-                const hiredApplicant = data.applicant.find(
-                    (a: any) => a.status === "hired"
-                );
+            setJob(data.job);
+            console.log("API DATA:", data);
+            setApplicants(Array.isArray(data.applicants) ? data.applicants : []);
 
-                if (hiredApplicant) {
-                    setSelectedApplicant(hiredApplicant);
-                    setSelectedApplicationId(hiredApplicant.job_application_uuid);
-                }
+            const hiredApplicant = data.applicants?.find(
+                (app: any) => app.status === "hired" || app.status === "completed"
+            );
 
-            } catch (err: any) {
-                console.error(err);
-                setError("Unable to load job details");
-            } finally {
-                setLoading(false);
+            if (hiredApplicant) {
+                setSelectedApplicant(hiredApplicant);
+                setSelectedApplicationId(hiredApplicant.id.toString());
             }
-        };
 
+        } catch (err) {
+            console.error(err);
+            setError("Unable to load job details");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchJob();
     }, [jobId]);
 
@@ -132,7 +131,7 @@ export default function JobDetailsPage() {
                     body: JSON.stringify({
                         rating,
                         comment,
-                        reviewee_id: selectedApplicant.id, // worker id
+                        reviewee_id: selectedApplicant.worker.id, // worker id
                         reviewee_type: "App\\Models\\User", // as per your API
                     }),
                 }
@@ -194,93 +193,51 @@ export default function JobDetailsPage() {
         }
     }
 
-    const handleHire = async (app: any) => {
-        if (!jobId) return;
+    const handleHire = async () => {
+        if (!selectedApplicationId) return;
 
-        try {
-            setLoading(true);
+        console.log("========= HANDLE HIRE =========");
 
-            const res = await fetch(`/api/recruiter/jobs/${jobId}/applicants/status`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    application_id: app.id,
-                    status: "hired",
-                }),
-            });
-
-            const data = await res.json();
-            console.log("APP DATA:", app);
-
-            // ✅ Even if API fails, we update frontend to mark as hired
-            setApplicants(prev =>
-                prev.map(a =>
-                    a.id === app.id ? { ...a, status: "hired" } : a
-                )
-            );
-
-            // ✅ Show applicant details on right panel
-            setSelectedApplicant({ ...app, status: "hired" });
-            setSelectedApplicationId(app.job_application_uuid);
-
-            alert("Worker hired successfully (frontend updated)");
-
-        } catch (err: any) {
-            console.error(err);
-            alert("Something went wrong, but frontend updated");
-            setApplicants(prev =>
-                prev.map(a =>
-                    a.id === app.id ? { ...a, hired: true } : a
-                )
-            );
-            setSelectedApplicant({ ...app, hired: true });
-            setSelectedApplicationId(app.job_application_uuid);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleMarkAsComplete = async () => {
-    if (!selectedApplicationId) return;
-
-    try {
-        setSubmitting(true);
-
-        const res = await fetch(`/api/recruiter/jobs/${jobId}/applicants/status`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                application_id: selectedApplicant.id,
-                status: "completed", // ✅ mark complete
-            }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.status === false) {
-            alert(data.message || "Failed to mark as complete");
+        console.log("Job ID:", jobId);
+        console.log("Application ID sending:", selectedApplicationId);
+        console.log("Full URL:", `/api/recruiter/jobs/${jobId}/applications/status`);
+        if (selectedApplicant?.status !== "applied") {
+            alert("Only applied candidates can be hired.");
             return;
         }
 
-        // ✅ Frontend update
-        setApplicants(prev =>
-            prev.map(a =>
-                a.job_application_uuid === selectedApplicationId
-                    ? { ...a, status: "completed" }
-                    : a
-            )
-        );
+        await fetch(`/api/recruiter/jobs/${jobId}/applications/status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                application_id: selectedApplicationId,
+                status: "hired",
+            }),
+        });
 
-        alert("Applicant marked as complete ✅");
-        setShowModal(true); // ✅ modal open kore review dite
+        await fetchJob();
+    };
 
-    } catch (err) {
-        console.error(err);
-        alert("Something went wrong");
-    } finally {
-        setSubmitting(false);
-    }
-};
+    const handleMarkAsComplete = async () => {
+        if (!selectedApplicationId) return;
+
+        if (selectedApplicant?.status !== "hired") {
+            alert("Only hired worker can be marked as completed.");
+            return;
+        }
+
+        await fetch(`/api/recruiter/jobs/${jobId}/applications/status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                application_id: selectedApplicationId,
+                status: "completed",
+            }),
+        });
+
+        await fetchJob();
+        setShowModal(true); // review modal
+    };
 
     return (
         <>
@@ -289,17 +246,24 @@ export default function JobDetailsPage() {
 
                     {/* LEFT HALF */}
                     <div className="w-full md:w-1/2 flex justify-center md:justify-end px-4">
-                        <div className="flex flex-col gap-4 max-w-[600px] mt-2 w-full md:pr-6">
+                        <div className="flex flex-col gap-4 max-w-[600px]  w-full md:pr-6">
 
-                            <div className="text-sm text-gray-400 flex items-center gap-2">
+                            <div className="text-sm text-gray-400 flex items-center gap-2 mt-8">
+                                <span
+                                    onClick={() => router.push("/recruiter/dashboard")}
+                                    className="cursor-pointer text-[#0B8260]"
+                                >
+                                    Home
+                                </span>
+                                <span>/</span>
                                 <span
                                     onClick={() => router.push("/recruiter/jobs")}
-                                    className="cursor-pointer hover:underline text-[#0B8260]"
+                                    className="cursor-pointer text-[#0B8260]"
                                 >
                                     My Jobs
                                 </span>
                                 <span>/</span>
-                                <span className="text-gray-500">Job Details</span>
+                                <span className="text-white">Job Details</span>
                             </div>
 
                             <div className="mt-8">
@@ -313,7 +277,7 @@ export default function JobDetailsPage() {
                                     {job.location.city}, {job.location.locality}
                                 </p>
                                 <p
-  className="mt-2 line-clamp-3 md:line-clamp-1"
+                                    className="mt-2 line-clamp-3 md:line-clamp-1"
                                 >
                                     {job.description ? stripHtml(job.description) : "No description provided"}
                                 </p>
@@ -395,7 +359,7 @@ export default function JobDetailsPage() {
                         <div className="bg-white p-6 rounded-lg shadow-md flex-1 min-h-[293px]">
                             <h1 className="text-2xl font-bold mb-4">Job Description</h1>
                             <div
-  className="
+                                className="
     break-words
     overflow-hidden
     max-w-full
@@ -415,8 +379,8 @@ export default function JobDetailsPage() {
     [&_img]:max-w-full
     [&_img]:h-auto
   "
-  dangerouslySetInnerHTML={{ __html: job.description || "No description provided" }}
-/>
+                                dangerouslySetInnerHTML={{ __html: job.description || "No description provided" }}
+                            />
                         </div>
                     )}
 
@@ -427,6 +391,10 @@ export default function JobDetailsPage() {
                                 {applicants.map((app, index) => (
                                     <div
                                         key={index}
+                                        onClick={() => {
+                                            setSelectedApplicant(app);
+                                            setSelectedApplicationId(app.id.toString());
+                                        }}
                                         className="bg-white p-6 rounded-lg shadow-md border"
                                         style={{ borderColor: "#DEE2E6" }}
                                     >
@@ -449,9 +417,9 @@ export default function JobDetailsPage() {
                                                 <p>{app.worker.email}</p>
                                             </div>
 
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center">
                                                 <img src="/images/mobile.svg" className="w-6 h-6" />
-                                                <p>{app.worker.mobile_number}</p>
+                                                <p>+{app.worker.mobile_number}</p>
                                             </div>
                                         </div>
 
@@ -474,18 +442,24 @@ export default function JobDetailsPage() {
                                                 </span>
                                             </div>
 
-                                            <button type="submit"
-                                                onClick={() => handleHire(app)}
-                                                disabled={app.status === "hired"}
-                                                className={`flex justify-center items-center min-w-[80px] rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
-                  bg-[#0B8260]  text-white 
-                  px-4 py-2 shadow-sm transition 
-                  no-underline outline-none focus:outline-none ${app.status === "hired"
-                                                        ? "bg-gray-500 text-gray-600 cursor-not-allowed"
-                                                        : "bg-[#0B8260] hover:bg-[#0a6f51] text-white cursor-pointer"
-                                                    }`}>
-                                                {app.status === "hired" ? "Hired" : "Hire"}
-                                            </button>
+                                            {app.status === "applied" ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedApplicant(app);
+                                                        setSelectedApplicationId(app.id.toString());
+                                                        handleHire();
+                                                    }}
+                                                    className="flex justify-center items-center min-w-[80px] rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
+      bg-[#0B8260] hover:bg-[#0a6f51] text-white px-4 py-2 shadow-sm transition"
+                                                >
+                                                    Hire
+                                                </button>
+                                            ) : (
+                                                <span className="font-semibold text-gray-500 capitalize">
+                                                    {app.status}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -538,14 +512,26 @@ export default function JobDetailsPage() {
                                 </div>
                             </div>
 
+
                             {/* Buttons */}
                             <div className="flex flex-col sm:flex-row gap-2 mt-6">
-                                <button
-                                    onClick={handleMarkAsComplete}
-                                    className="w-[250px] h-[44px] rounded-lg text-[#0B8260] bg-[#CCE5DE] border border-[#0B8260]"
-                                >
-                                    Mark As Complete
-                                </button>
+                                {selectedApplicant?.status === "hired" && (
+                                    <button
+                                        onClick={handleMarkAsComplete}
+                                        className="w-[250px] h-[44px] rounded-lg text-[#0B8260] bg-[#CCE5DE] border border-[#0B8260]"
+                                    >
+                                        Mark As Complete
+                                    </button>
+                                )}
+
+                                {selectedApplicant?.status === "completed" && (
+                                    <button
+                                        onClick={() => setShowModal(true)}
+                                        className="w-[250px] h-[44px] rounded-lg bg-yellow-500 text-white"
+                                    >
+                                        Give Review
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => {
                                         setSelectedApplicant(null);

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import JobCardSkeleton from "../../../components/skeletons/JobCardSkeleton";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -37,21 +38,32 @@ const formatDateOrdinal = (dateStr) => {
 };
 
 
+
+
 export default function PostedJobs() {
   const [jobs, setJobs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const fetchJobs = async () => {
-      const res = await fetch("/api/recruiter/jobs", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      });
+      try {
+        const res = await fetch("/api/recruiter/jobs", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
 
-      const data = await res.json();
-      setJobs(data.data || []);
+        const data = await res.json();
+        setJobs(data.data || []);
+        
+      }
+      catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchJobs();
@@ -77,83 +89,90 @@ export default function PostedJobs() {
 
 
   return (
-    <div className="w-full flex flex-col gap-6 overflow-hidden">
+    <div className="w-full flex flex-col gap-6 overflow-hidden min-h-screen">
       {/* HEADING */}
       <h1 className="text-2xl font-semibold text-gray-800 mb-2">Posted Jobs</h1>
       {/* JOB GRID */}
-      <div className="grid grid-cols-2 gap-6">
-        {visibleJobs.map((job) => (
-          <div
-            key={job.uuid}
-            className="bg-white flex flex-col p-2 rounded-lg border border-[#DEE2E6] gap-4"
-          >
-            {/* HEADER */}
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2
-                  className="font-semibold text-lg text-gray-900 cursor-pointer line-clamp-1"
-                  onClick={() => router.push(`/recruiter/jobs/${job.uuid}/details`)}
-                >
-                  {job.title ? stripHtml(job.title) : "No title provided"}
-                </h2>
-                <p className="text-[#A3A3A3] text-sm">{getPostedDaysAgo(job.created_at)}</p>
+      {loading ? (
+        <div className="grid grid-cols-2 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <JobCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-6">
+          {visibleJobs.map((job) => (
+            <div
+              key={job.uuid}
+              className="bg-white flex flex-col p-2 rounded-lg border border-[#DEE2E6] gap-4"
+            >
+              {/* HEADER */}
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2
+                    className="font-semibold text-lg text-gray-900 cursor-pointer line-clamp-1"
+                    onClick={() => router.push(`/recruiter/jobs/${job.uuid}/details`)}
+                  >
+                    {job.title ? stripHtml(job.title) : "No title provided"}
+                  </h2>
+                  <p className="text-[#A3A3A3] text-sm">{getPostedDaysAgo(job.created_at)}</p>
+                </div>
+                <button className="w-10 h-10 flex shrink-0 bg-[#F1F1F1] rounded-full flex justify-center items-center cursor-pointer" onClick={() => router.push(`/recruiter/jobs/${job.uuid}/edit`)}>
+                  <img src="/images/edit-btn.svg" width={16} />
+                </button>
               </div>
-              <button className="w-10 h-10 flex shrink-0 bg-[#F1F1F1] rounded-full flex justify-center items-center cursor-pointer"onClick={() => router.push(`/recruiter/jobs/${job.uuid}/edit`)}>
-                <img src="/images/edit-btn.svg" width={16} />
-              </button>
-            </div>
 
-            {/* CHIPS */}
-            <div className="flex gap-2 flex-wrap">
-              {[job.category?.name, capitalize(job.salary?.pay_type), job.location ? `${job.location.city}, ${job.location.locality}` : ""]
-                .filter(Boolean)
-                .map((tag, i) => (
-                  <span key={i} className="px-3 py-1 text-xs rounded-full bg-[#F1F1F1] text-[#6E8497]">
-                    {tag}
-                  </span>
-                ))}
-            </div>
+              {/* CHIPS */}
+              <div className="flex gap-2 flex-wrap">
+                {[job.category?.name, capitalize(job.salary?.pay_type), job.location ? `${job.location.city}, ${job.location.locality}` : ""]
+                  .filter(Boolean)
+                  .map((tag, i) => (
+                    <span key={i} className="px-3 py-1 text-xs rounded-full bg-[#F1F1F1] text-[#6E8497]">
+                      {tag}
+                    </span>
+                  ))}
+              </div>
 
-            {/* DESCRIPTION */}
-            <p className="text-[#30363F] text-sm leading-6 overflow-hidden" style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-            }}>{job.description ? stripHtml(job.description) : "No description provided"}</p>
+              {/* DESCRIPTION */}
+              <p className="text-[#30363F] text-sm leading-6 overflow-hidden" style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+              }}>{job.description ? stripHtml(job.description) : "No description provided"}</p>
 
-            {/* FOOTER */}
-            <div className="flex items-center justify-between w-full gap-1 mt-auto">
-              <span className="font-medium text-[#30363F] whitespace-nowrap">
-                ₹{job.salary?.pay_amount}
-                <span className="text-[#8CA0A9]">/{capitalize(job.salary?.pay_type)}</span>
-              </span>
-              <span className="text-[#30363F] text-center flex-1 min-w-0 truncate">
-                Start Date: {formatDateOrdinal(job.schedule.start_date)}
-              </span>
-              <button
-                className="flex justify-center items-center min-w-[80px] rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
+              {/* FOOTER */}
+              <div className="flex items-center justify-between w-full gap-1 mt-auto">
+                <span className="font-medium text-[#30363F] whitespace-nowrap">
+                  ₹{job.salary?.pay_amount}
+                  <span className="text-[#8CA0A9]">/{capitalize(job.salary?.pay_type)}</span>
+                </span>
+                <span className="text-[#30363F] text-center flex-1 min-w-0 truncate">
+                  Start Date: {formatDateOrdinal(job.schedule.start_date)}
+                </span>
+                <button
+                  className="flex justify-center items-center min-w-[80px] rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
           bg-[#0B8260] hover:bg-[#0a6f51] text-white 
           px-4 py-2 shadow-sm transition 
           no-underline outline-none focus:outline-none"
-                style={{
-                  backgroundColor: job.applicants_count > 0 ? "#0B8260" : "#6C757D",
-                  cursor: "pointer",
-                }}
-                onClick={() =>
-                  router.push(`/recruiter/jobs/${job.uuid}/applications`)
-                }
-              >
-                {job.applicants_count} {job.applicants_count === 1 ? "Applicant" : "Applicants"}
-              </button>
+                  style={{
+                    backgroundColor: job.applicants_count > 0 ? "#0B8260" : "#6C757D",
+                    cursor: "pointer",
+                  }}
+                  onClick={() =>
+                    router.push(`/recruiter/jobs/${job.uuid}/applications`)
+                  }
+                >
+                  {job.applicants_count} {job.applicants_count === 1 ? "Applicant" : "Applicants"}
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-
+          ))}
+        </div>
+      )}
       {/* PAGINATION */}
       {totalPages > 1 && (
         <div
-          className="flex justify-center"
+          className="flex justify-center mt-auto"
           style={{ width: "334px", margin: "0 auto", gap: "4px", padding: "5px" }}
         >
           {Array.from({ length: totalPages }).map((_, i) => {

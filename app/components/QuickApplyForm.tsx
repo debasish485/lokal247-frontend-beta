@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
+import toast from "react-hot-toast";
 
 type Props = {
   jobId: string;
@@ -73,21 +74,21 @@ export default function QuickApplyForm({ jobId }: Props) {
 
       const captchaToken = await recaptchaRef.current?.executeAsync();
       if (!captchaToken) {
-        alert("Please complete the CAPTCHA");
+        toast.error("Please complete the CAPTCHA");
         setLoading(false);
         return;
       }
       const res = await fetch(`/api/worker/jobs/${jobId}/apply`, {
         method: "POST",
         credentials: "include",
-        headers:{
-          "Content-Type":"application/json",
+        headers: {
+          "Content-Type": "application/json",
         },
-        body:JSON.stringify(
+        body: JSON.stringify(
           {
             name,
             email,
-            mobile_number:contact,
+            mobile_number: contact,
             dob,
             captchaToken,
           }
@@ -103,12 +104,13 @@ export default function QuickApplyForm({ jobId }: Props) {
 
       if (!res.ok) {
         throw new Error(data.message || "Failed to apply");
+        return;
       }
 
       setSubmitted(true);
-    } catch (err) {
-      console.error(err);
-      alert("Job apply failed");
+    } catch (err: any) {
+      //console.error("Apply job error:", err);
+      toast.error(err.message || "Job apply failed");
     } finally {
       setLoading(false);
       recaptchaRef.current?.reset();
@@ -133,15 +135,15 @@ export default function QuickApplyForm({ jobId }: Props) {
           Please login to apply for this job.
         </p>
         <div className="flex justify-center">
-        <button
-          onClick={() => router.push("/auth/phone-login")}
-          className="flex justify-center items-center min-w-[150px] rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
+          <button
+            onClick={() => router.push("/auth/phone-login")}
+            className="flex justify-center items-center min-w-[150px] rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
           bg-[#0B8260] hover:bg-[#0a6f51] text-white 
           px-4 py-2 shadow-sm transition 
           no-underline outline-none focus:outline-none"
-        >
-          Login
-        </button>
+          >
+            Login
+          </button>
         </div>
       </div>
     );
@@ -232,12 +234,12 @@ export default function QuickApplyForm({ jobId }: Props) {
         type="submit"
         disabled={!isFormValid || loading}
         className={`flex justify-center items-center w-full rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
-          bg-[#0B8260] hover:bg-[#0a6f51] text-white 
+          bg-[#0B8260]  text-white 
           px-4 py-2 shadow-sm transition 
           no-underline outline-none focus:outline-none
           ${isFormValid
-            ? "bg-[#OB8260] text-white hover:bg-emerald-700"
-            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            ? "bg-[#0B8260] text-white "
+            : "bg-gray-300 text-white cursor-not-allowed"
           }
         `}
       >

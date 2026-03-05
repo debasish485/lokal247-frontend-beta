@@ -2,6 +2,7 @@
 
 import EditWorkerProfileSkeleton from "../../components/skeletons/EditWorkerProfileSkeleton";
 
+
 type WorkType = {
   preference?: string;
   duration_type?: string;
@@ -55,19 +56,8 @@ export default function EditWorkerProfile({
 
   return (
     <div className="relative">
-      {message && (
-        <div
-          className={`absolute top-0 right-0 z-20 flex items-center gap-2
-      rounded-md px-3 py-2 shadow border text-sm
-      ${message.type === "success"
-              ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-              : "bg-red-50 border-red-300 text-red-700"}
-    `}
-        >
-          <span>{message.type === "success" ? "✅" : "❌"}</span>
-          <span>{message.text}</span>
-        </div>
-      )}
+      
+      
       <h2 className="text-xl font-semibold text-gray-800 mb-6">My Profile</h2>
 
       {/* PHOTO */}
@@ -278,7 +268,7 @@ export default function EditWorkerProfile({
 
       </div>
 
-      
+
       {/* SAVE BUTTON */}
       <div className="flex justify-start mt-6">
         <button

@@ -14,9 +14,9 @@ type JobCardProps = {
   salary: string;
   type: string;
   shift: string;
-  pay_type:string,
+  pay_type: string,
   schedule: {
-    shift_timing:string;
+    shift_timing: string;
     start_date: string;
     start_time: string;
     end_time: string;
@@ -64,14 +64,14 @@ export default function JobCard({
   };
 
   function stripHtml(html: string) {
-        const tmp = document.createElement("div");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
-    }
-    function capitalizeFirst(text: string) {
-  if (!text) return "";
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  }
+  function capitalizeFirst(text: string) {
+    if (!text) return "";
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
   return (
     <article className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
       <div className="flex gap-4">
@@ -85,7 +85,7 @@ export default function JobCard({
 
         <div className="flex-1">
           <Link href={`/listing/${uuid}`} className="text-lg font-medium text-[#333333] hover:underline line-clamp-1">
-            {title ? stripHtml(title) :"No title Provided"}
+            {title ? stripHtml(title) : "No title Provided"}
           </Link>
           <p className="text-sm text-[#6E8497] mt-1">{company}</p>
 
@@ -108,7 +108,7 @@ export default function JobCard({
           WebkitBoxOrient: "vertical",
         }}
       >
-        {description ? stripHtml(description) :"No description provided"}
+        {description ? stripHtml(description) : "No description provided"}
       </p>
 
       <div className="flex flex-wrap gap-2 mt-3">
@@ -123,8 +123,8 @@ export default function JobCard({
         </span>
       </div>
 
-      <div className="mt-auto flex items-center justify-between text-sm">
-        <div className="flex items-center gap-4">
+      <div className="mt-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
           <span className="font-semibold text-[#1B2021]">
             {salary}
             <span className="text-[#6E8497]"> / {pay_type === "monthly" ? "Monthly" : "Daily"}</span>
@@ -138,10 +138,19 @@ export default function JobCard({
 
         <button
           onClick={handleQuickApply}
-          className="inline-block rounded-[4px] text-[16px] h-[50px] font-medium tracking-[0.2px] 
-          bg-[#0B8260] hover:bg-[#0a6f51] text-white 
-          px-4 py-2 shadow-sm transition 
-          no-underline outline-none focus:outline-none"
+          className="
+  w-full sm:w-auto
+  rounded-[4px]
+  text-sm sm:text-[16px]
+  h-[44px] sm:h-[50px]
+  font-medium tracking-[0.2px]
+  bg-[#0B8260] hover:bg-[#0a6f51] text-white
+  px-3 sm:px-4
+  shadow-sm transition
+  whitespace-nowrap
+  text-center
+  no-underline outline-none focus:outline-none
+"
         >
           Quick Apply
         </button>

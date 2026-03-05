@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import JobDescriptionEditor from "@/app/components/JobDescriptionEditor";
 import ReCAPTCHA from "react-google-recaptcha";
+import toast from "react-hot-toast";
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 if (!RECAPTCHA_SITE_KEY) {
@@ -38,7 +39,7 @@ export default function EditJobPage() {
             // ✅ Execute invisible reCAPTCHA
             const captchaToken = await recaptchaRef.current?.executeAsync();
             if (!captchaToken) {
-                alert("Please complete the CAPTCHA");
+                toast.error("Please complete the CAPTCHA");
                 setLoading(false);
                 return;
             }
@@ -54,7 +55,7 @@ export default function EditJobPage() {
                 gender_preference: job.gender_preference,
                 start_date: job.schedule?.start_date,
                 shift_timing: job.schedule?.shift_timing,
-                captchaToken, // ✅ send captcha token
+                captchaToken, 
             };
 
             console.log("PUT PAYLOAD WITH CAPTCHA 👉", payload);
@@ -72,10 +73,10 @@ export default function EditJobPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Update failed");
 
-            alert("Job updated successfully!");
+            toast.success("Job updated successfully");
             router.push("/recruiter/jobs");
         } catch (err: any) {
-            alert(err.message || "Something went wrong");
+           toast.error(err.message || "Unable to update job. Please try again");
         } finally {
             setLoading(false);
             recaptchaRef.current?.reset(); // ✅ reset after submission

@@ -45,7 +45,7 @@ export default function JobDescriptionEditor({
     "underline",
     "strike",
     "list",
-    "bullet",
+    //"bullet",
     "link",
     "image",
   ];

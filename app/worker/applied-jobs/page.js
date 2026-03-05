@@ -83,8 +83,14 @@ export default function AppliedJobs() {
   }, [jobs]);
 
   if (loading) {
-    return <ListingSkeleton />;
-  }
+  return (
+    <div className="grid grid-cols-2 gap-6 px-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <ListingSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
 
   if (error) {
     return (
@@ -120,6 +126,7 @@ export default function AppliedJobs() {
       <h1 className="text-xl font-semibold text-gray-900">
         My Job History
       </h1>
+      
 
       {/* JOB GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

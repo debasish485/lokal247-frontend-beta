@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import FallbackImage from "../../components/FallbackImage";
 import EditWorkerProfile from "./EditWorkerProfile";
 import EditWorkerProfileSkeleton from "../../components/skeletons/EditWorkerProfileSkeleton";
+import toast from "react-hot-toast";
 
 
 export default function WorkerProfilePage() {
@@ -18,7 +19,8 @@ export default function WorkerProfilePage() {
   const [loading, setLoading] = useState(true);
   const [photo, setPhoto] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
-  const [message, setMessage] = useState(null);
+  
+  
 
 
 
@@ -129,18 +131,11 @@ export default function WorkerProfilePage() {
 
       setProfile(data.data);
       setFormData(data.data);
-      setMessage({ type: "success", text: "Profile updated successfully" });
-      setTimeout(() => {
-        setMessage(null);
-      }, 3000);
-
+      toast.success("Your profile has been updated successfully");
     }
     catch (err) {
       console.log(err);
-      setMessage({ type: "error", text: "Profile update failed" });
-      setTimeout(() => {
-        setMessage(null);
-      }, 3000);
+      toast.error("Unable to update your profile. Please try again");
     }
     finally {
       setUpdateLoading(false);
@@ -154,16 +149,12 @@ export default function WorkerProfilePage() {
         method: "POST",
         credentials: "include",
       });
-
+      toast.success("Logged out successfully");
       router.replace("/auth/phone-login");
       router.refresh();
     } catch (err) {
-      console.log(err);
-      setMessage({ type: "error", text: "Logout failed" });
-      setTimeout(() => {
-        setMessage(null);
-      }, 3000);
-    }
+      toast.error("Logout failed");
+    } 
   };
 
   function Stars({ rating }) {
@@ -312,7 +303,6 @@ export default function WorkerProfilePage() {
             photo={photo}
             setPhoto={setPhoto}
             updateLoading={updateLoading}
-            message={message}
           />
         </div>
       </div>

@@ -19,6 +19,7 @@ type RecruiterPanelPageProps = {
   EMERALD: string;
   message: MessageType;
   updateLoading: boolean;
+  setJobCount: React.Dispatch<React.SetStateAction<number>>;
 };
 
 export default function RecruiterPanelPage({
@@ -29,6 +30,7 @@ export default function RecruiterPanelPage({
   EMERALD,
   message,
   updateLoading,
+  setJobCount,
 }: RecruiterPanelPageProps) {
   // Panel loading state for tab-switch skeleton
   const [panelLoading, setPanelLoading] = useState(false);
